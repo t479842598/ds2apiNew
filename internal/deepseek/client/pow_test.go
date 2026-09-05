@@ -114,3 +114,15 @@ func fmtHex(b []byte) string {
 	}
 	return string(out)
 }
+
+func TestComputePowMissingExpireAtFails(t *testing.T) {
+	// expire_at 是求解 prefix 的必需输入：缺失时旧实现用 2023 年的假时间戳兜底，
+	// 算出的答案与上游真实前缀必然不匹配、会被上游直接拒绝——现在改为本地明确报错。
+	if _, err := ComputePow(t.Context(), map[string]any{
+		"algorithm": "DeepSeekHashV1",
+		"challenge": "abcd",
+		"salt":      "salt",
+	}); err == nil {
+		t.Fatal("challenge without expire_at must fail, not compute with a placeholder")
+	}
+}

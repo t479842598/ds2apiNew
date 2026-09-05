@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -153,5 +154,52 @@ func TestBaseHeadersWebPlatformConsistent(t *testing.T) {
 	}
 	if h["x-client-version"] != ClientVersion {
 		t.Fatalf("x-client-version = %q, want ClientVersion %q", h["x-client-version"], ClientVersion)
+	}
+}
+
+// TestChromeContractMaxSupportedMajorMatchesDependency 守住契约里显式声明的上限。
+//
+// max_supported_major 是给读不到 Go 依赖注册表的 Node/Vercel 侧做等价钳制用的。
+// 一旦 httpcloak 升级让真实预设上限变化而 JSON 忘了跟着改，两侧就会钳到不同版本、
+// 悄悄漂移——而这个字段的存在正是为了让"两侧一致"可被断言，所以它自己必须先为真。
+func TestChromeContractMaxSupportedMajorMatchesDependency(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join(".", "constants_shared.json"))
+	if err != nil {
+		t.Fatalf("read shared constants: %v", err)
+	}
+	var cfg sharedConstants
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		t.Fatalf("unmarshal shared constants: %v", err)
+	}
+	declared := strings.TrimSpace(cfg.Chrome.MaxSupportedMajor)
+	if declared == "" {
+		t.Fatal("chrome.max_supported_major missing from constants_shared.json; " +
+			"the Node/Vercel path has no other way to clamp like the Go side does")
+	}
+	actual := trans.ChromeMaxSupportedMajor()
+	if actual <= 0 {
+		t.Skip("httpcloak exposed no chrome-*-windows preset; nothing to compare against")
+	}
+	declaredMajor, err := strconv.Atoi(declared)
+	if err != nil {
+		t.Fatalf("chrome.max_supported_major = %q is not a version number", declared)
+	}
+	if declaredMajor != actual {
+		t.Fatalf("contract declares max_supported_major=%d but httpcloak actually ships up to chrome-%d-windows; "+
+			"Go and Node would clamp to different versions", declaredMajor, actual)
+	}
+	// 契约生效值本身必须在区间内，否则 Go 与 Node 会各自钳出不同结果。
+	effective := strings.TrimSpace(cfg.Chrome.MajorVersion)
+	effectiveMajor, err := strconv.Atoi(effective)
+	if err != nil {
+		t.Fatalf("chrome.major_version = %q is not a version number", effective)
+	}
+	if effectiveMajor > actual {
+		t.Fatalf("chrome.major_version=%d exceeds httpcloak ceiling %d; the Go side would clamp it down",
+			effectiveMajor, actual)
+	}
+	// 生效版本的 GREASE 必须能拿到（钉值或公式），否则钳制后仍可能发空品牌串。
+	if got := ChromeGreaseBrand(); got == "" {
+		t.Fatalf("empty GREASE brand for effective major %s", effective)
 	}
 }

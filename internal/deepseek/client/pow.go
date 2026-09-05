@@ -19,7 +19,13 @@ func ComputePow(ctx context.Context, challenge map[string]any) (int64, error) {
 	}
 	challengeStr, _ := challenge["challenge"].(string)
 	salt, _ := challenge["salt"].(string)
-	expireAt := toInt64(challenge["expire_at"], 1680000000)
+	expireAt := toInt64(challenge["expire_at"], 0)
+	// expire_at 是求解 prefix（<salt>_<expire_at>_）的必需输入：拿不到就不能算。
+	// 旧实现用假时间戳 1680000000（2023 年）兑底——算出来的答案必然与上游的
+	// 真实前缀不匹配、会被直接拒绝，比一个明确的本地产错更糟。
+	if expireAt == 0 {
+		return 0, errors.New("pow: challenge has no usable expire_at")
+	}
 	difficulty := toInt64FromFloat(challenge["difficulty"], 144000)
 
 	return pow.SolvePow(ctx, challengeStr, salt, expireAt, difficulty)
@@ -43,8 +49,11 @@ func BuildPowHeader(challenge map[string]any, answer int64) (string, error) {
 }
 
 // powPrefetchFreshnessMargin is how many seconds before expire_at a cached
-// challenge is considered stale. Matches deepseek2api's 30s margin.
-const powPrefetchFreshnessMargin = 30
+// challenge is considered stale. Official web bundle carries expireTimeOffset:
+// 6e4 (60 s, milliseconds) — i.e. DeepSeek itself treats a challenge with under
+// 60 s left as not worth submitting. This used to mirror deepseek2api's 30 s
+// guess; aligned to the official 60 s value on 2026-09-05.
+const powPrefetchFreshnessMargin = 60
 
 type powChallengeEntry struct {
 	challenge map[string]any

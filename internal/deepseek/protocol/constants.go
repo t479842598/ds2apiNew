@@ -235,7 +235,11 @@ type clientConstants struct {
 // 它是跨语言单一来源：Go 侧由此推送给 transport 决定 TLS 预设，
 // Node/Vercel 侧（internal/js/shared/deepseek-constants.js）读同一文件。
 type chromeConstants struct {
-	MajorVersion        string            `json:"major_version"`
+	MajorVersion string `json:"major_version"`
+	// MaxSupportedMajor 是契约里**显式声明**的 httpcloak 预设上限，专给读不到 Go
+	// 依赖注册表的 Node/Vercel 侧做等价钳制。它必须等于 transport 从
+	// fingerprint.Available() 枚举出的真实上限，由守卫用例把关，不得手改乱填。
+	MaxSupportedMajor   string            `json:"max_supported_major"`
 	GreaseFallbackMajor string            `json:"grease_fallback_major"`
 	GreaseBrands        map[string]string `json:"grease_brands"`
 }

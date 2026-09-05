@@ -121,3 +121,23 @@ func TestCreateRandomDeviceID(t *testing.T) {
 		t.Fatal("expected two random device ids to differ")
 	}
 }
+
+// TestIsFreshChallengeMarginBoundary 钉死 60s 余量的两个边界：剩 45s 必须判不新鲜、
+// 剩 90s 必须判新鲜。这是官方 bundle 的 expireTimeOffset = 6e4（60s）——别又改回
+// deepseek2api 的 30s 猜测，改回来这两个用例会失败。
+func TestIsFreshChallengeMarginBoundary(t *testing.T) {
+	now := time.Now().Unix()
+	cases := []struct {
+		name     string
+		expireAt int64
+		fresh    bool
+	}{
+		{"expires in 45s (inside the 60s margin) -> stale", now + 45, false},
+		{"expires in 90s (outside the margin) -> fresh", now + 90, true},
+	}
+	for _, tc := range cases {
+		if got := isFreshChallenge(map[string]any{"expire_at": float64(tc.expireAt)}); got != tc.fresh {
+			t.Fatalf("%s: isFreshChallenge = %v, want %v", tc.name, got, tc.fresh)
+		}
+	}
+}

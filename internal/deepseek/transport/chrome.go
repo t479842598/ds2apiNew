@@ -89,6 +89,12 @@ func chromeMaxSupportedMajor() int {
 	return max
 }
 
+// ChromeMaxSupportedMajor 导出版，供契约守卫用例与运维工具比对
+// “共享契约里声明的上限”与“依赖真实能提供的上限”是否一致。
+func ChromeMaxSupportedMajor() int {
+	return chromeMaxSupportedMajor()
+}
+
 // clampChromeMajor 把请求的大版本钳制到 httpcloak 真正有 windows 预设的区间，
 // 返回（生效版本，说明）；说明为空表示没有发生钳制。
 //

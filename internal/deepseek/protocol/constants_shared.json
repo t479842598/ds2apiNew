@@ -7,6 +7,7 @@
   },
   "chrome": {
     "major_version": "152",
+    "max_supported_major": "152",
     "grease_fallback_major": "152",
     "grease_brands": {
       "150": "\"Not;A=Brand\";v=\"8\"",

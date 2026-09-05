@@ -163,3 +163,52 @@ test('js compat: token fixtures', () => {
     assert.equal(got, expectedByName.get(c.name), `${c.name}: tokens mismatch`);
   }
 });
+
+// Node/Vercel 侧必须与 Go 侧钳到同一个版本。契约里显式声明的 max_supported_major
+// 是两侧唯一的共同依据：Go 从 fingerprint.Available() 枚举，Node 读不到依赖注册表。
+// 缺这个字段、或超限请求没被钳下来，都算失败。
+test('js chrome major clamps to contract max_supported_major like the go side', () => {
+  const shared = readJSON(path.resolve(__dirname, '../../internal/deepseek/protocol/constants_shared.json'));
+  const chrome = shared.chrome || {};
+  assert.ok(chrome.max_supported_major, 'chrome.max_supported_major missing from constants_shared.json');
+  const ceiling = Number(chrome.max_supported_major);
+  assert.ok(Number.isInteger(ceiling) && ceiling > 0, `max_supported_major not a version: ${chrome.max_supported_major}`);
+  // 契约生效值本身不得超过声明上限，否则 Go 会钳、Node 也会钳但依据不同，等于没对齐。
+  assert.ok(Number(chrome.major_version) <= ceiling,
+    `chrome.major_version=${chrome.major_version} exceeds max_supported_major=${ceiling}`);
+
+  const prev = process.env.DS2API_CHROME_MAJOR_VERSION;
+  process.env.DS2API_CHROME_MAJOR_VERSION = String(ceiling + 1);
+  try {
+    const resolved = deepseekConstants.__test.resolveChromeContract();
+    assert.equal(resolved.majorVersion, chrome.max_supported_major,
+      'over-ceiling request must clamp to the contract ceiling, same as the Go side');
+    assert.ok(String(resolved.clampNotice).includes('clamped'), 'clamp must be reported, not silent');
+    // 钳制后 GREASE 必须按新版本算，否则会出现 UA 报 152、GREASE 报 153 的新矛盾。
+    assert.ok(resolved.greaseBrand.includes(';v='), `grease brand missing for clamped major: ${resolved.greaseBrand}`);
+    const expectedGrease = chrome.grease_brands
+      && chrome.grease_brands[chrome.max_supported_major];
+    if (expectedGrease) {
+      assert.equal(resolved.greaseBrand, expectedGrease, 'GREASE must follow the clamped major');
+    }
+  } finally {
+    if (prev === undefined) delete process.env.DS2API_CHROME_MAJOR_VERSION;
+    else process.env.DS2API_CHROME_MAJOR_VERSION = prev;
+  }
+});
+
+// 未超限时不得误钳：否则每次正常启动都会假告警，运维很快就不看日志了。
+test('js chrome major is untouched when within contract ceiling', () => {
+  const shared = readJSON(path.resolve(__dirname, '../../internal/deepseek/protocol/constants_shared.json'));
+  const chrome = shared.chrome || {};
+  const prev = process.env.DS2API_CHROME_MAJOR_VERSION;
+  try {
+    delete process.env.DS2API_CHROME_MAJOR_VERSION;
+    const resolved = deepseekConstants.__test.resolveChromeContract();
+    assert.equal(resolved.majorVersion, chrome.major_version, 'default contract value must pass through');
+    assert.equal(resolved.clampNotice, '', 'no clamp notice expected within range');
+  } finally {
+    if (prev === undefined) delete process.env.DS2API_CHROME_MAJOR_VERSION;
+    else process.env.DS2API_CHROME_MAJOR_VERSION = prev;
+  }
+});

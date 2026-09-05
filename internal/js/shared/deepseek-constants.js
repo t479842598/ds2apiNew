@@ -26,11 +26,14 @@ const DEFAULT_BASE_HEADERS = Object.freeze({
 // 这里只能保证 HTTP 头自洽。详见 docs/DEPLOY.md 的风险说明。
 //
 // 关于版本上限：Go 侧会把生效大版本钳制到 httpcloak 真实存在的 windows 预设
-// （见 transport.clampChromeMajor），而 Node 侧没有 TLS 预设可对钳，做不到等价钳制。
-// 所以 JSON 里的 chrome.major_version 不得写超过 httpcloak 最高预设的值，
-// 否则两边会漂移（Go 降级、Node 照旧）——Go 启动日志会就此发 warn 提示。
+// （见 transport.clampChromeMajor，上限由 fingerprint.Available() 枚举得出）。
+// Node 没有 TLS 预设可对钳、也读不到 Go 依赖的注册表，所以只能读契约里**显式声明**的
+// max_supported_major 做等价钳制。该字段由 Go 侧测试断言永远等于实际枚举上限
+// （TestChromeContractMaxSupportedMajorMatchesDependency），所以它不会悄悄腐烂。
+// 两侧都钳，才不会出现在库不支持新版本时“Go 降级、Node 照旧”的漂移。
 const BUILTIN_CHROME = Object.freeze({
   majorVersion: '152',
+  maxSupportedMajor: '152',
   greaseFallbackMajor: '152',
   greaseBrands: {
     '150': '"Not;A=Brand";v="8"',
@@ -105,15 +108,32 @@ function resolveChromeContract() {
   // 环境变量永远优先，与 Go 侧 transport 保持同一优先级规则。
   const envMajor = normalizeChromeMajor(process.env.DS2API_CHROME_MAJOR_VERSION);
   const jsonMajor = normalizeChromeMajor(chrome.major_version) || BUILTIN_CHROME.majorVersion;
-  const majorVersion = envMajor || jsonMajor;
+  let majorVersion = envMajor || jsonMajor;
   const fallbackMajor = String(chrome.grease_fallback_major || BUILTIN_CHROME.greaseFallbackMajor);
+
+  // 与 Go 侧 clampChromeMajor 等价的钳制：超过库上限时降下来，让两侧发同一个版本。
+  const ceiling = normalizeChromeMajor(chrome.max_supported_major) || BUILTIN_CHROME.maxSupportedMajor;
+  let clampNotice = '';
+  if (Number(majorVersion) > Number(ceiling)) {
+    clampNotice = `requested Chrome ${majorVersion} exceeds httpcloak's newest windows preset (${ceiling}); ` +
+      'Node/Vercel path clamped to ' + ceiling + ' to match the Go side';
+    majorVersion = ceiling;
+  }
+
   // GREASE 串：钉值优先，否则按 Chromium 算法计算（升版不再需要手补表）。
+  // 必须用钳制**后**的版本算，否则会出现 UA 报 152、GREASE 报 153 的新矛盾。
   const greaseBrand = resolveChromeGreaseBrand(majorVersion, brands, fallbackMajor);
-  return { majorVersion, greaseBrand };
+  return { majorVersion, greaseBrand, clampNotice };
 }
 
 const CHROME_CONTRACT = resolveChromeContract();
 const CHROME_MAJOR_VERSION = CHROME_CONTRACT.majorVersion;
+const CHROME_CLAMP_NOTICE = CHROME_CONTRACT.clampNotice;
+if (CHROME_CLAMP_NOTICE) {
+  // 静默降级跟“配了却没生效”一样坑：Node 侧也要说清楚。
+  // eslint-disable-next-line no-console
+  console.warn(`[chrome] ${CHROME_CLAMP_NOTICE}`);
+}
 const CHROME_USER_AGENT = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROME_MAJOR_VERSION}.0.0.0 Safari/537.36`;
 // 品牌「顺序」每次安装/会话随机、不是指纹信号，顺序沿用此模板不换。
 const CHROME_SEC_CH_UA = `${CHROME_CONTRACT.greaseBrand}, "Chromium";v="${CHROME_MAJOR_VERSION}", "Google Chrome";v="${CHROME_MAJOR_VERSION}"`;
@@ -346,6 +366,7 @@ module.exports = {
   CLIENT: Object.freeze({ ...shared.client }),
   CLIENT_VERSION: shared.client.version,
   CHROME_MAJOR_VERSION,
+  CHROME_CLAMP_NOTICE,
   computeChromeGreaseBrand,
   classifyUpstreamBlock,
   BASE_HEADERS: Object.freeze(shared.baseHeaders),
@@ -360,6 +381,7 @@ module.exports = {
   __test: {
     buildBaseHeaders,
     normalizeClient,
+    resolveChromeContract,
     sharedConstantsPaths,
     timezoneOffsetFor,
     acceptLanguageFor,
