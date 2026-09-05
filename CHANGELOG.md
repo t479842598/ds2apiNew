@@ -1,5 +1,28 @@
 # Changelog
 
+## 4.9.1 (2026-09-05)
+
+### 新增：Vercel/Node 路径获得与 Go 等价的 Chrome 版本钳制
+
+4.9.0 只给 Go 侧加了钳制：HTTP 层跟随 httpcloak 真实预设能力，契约值写过库上限时 Go 会降级，
+但 Node/Vercel 没有 TLS 预设可对钳，会把超限版本原样发出去——两侧悄悄漂移。
+现在契约新增 `chrome.max_supported_major` 作为显式上限，JS 读到超限请求值时钳到该值并打
+`console.warn`（GREASE 用钳制后版本计算）。该字段由 Go 守卫测试断言永远等于
+`fingerprint.Available()` 的真实枚举上限（已做变异检验：改成 150 立即 FAIL），不会悄悄腐烂。
+
+### 新增：Chrome 指纹新鲜度检查脚本
+
+`scripts/check-chrome-fingerprint-freshness.sh` 一条命令给出：契约里钉的版本、真实 Chrome stable、
+httpcloak 实际提供的预设区间，以及“能不能升”的明确结论（升依赖还是改 JSON 还是维持现状）。
+网络失败时 FATAL + 非零退出，不给错误结论。把“等 httpcloak 出 153 再跟”从人的记忆变成可复现检查。
+
+### 修复：PoW 缓存过期余量对齐官方 60s，并去掉假时间戳兑底
+
+- `powPrefetchFreshnessMargin` 30s → **60s**：原值照抄第三方 deepseek2api 的猜测，官方 bundle 一手值是
+  `expireTimeOffset: 6e4`（60s），已对齐并改掉注释依据（边界用例：剩 45s 判不新鲜 / 90s 判新鲜）。
+- 修掉 `ComputePow` 里 `expire_at` 缺失时用 2023 年假时间戳 `1680000000` 兑底、必然算出被上游拒绝的
+  错误答案的问题——改为本地明确报错。
+
 ## 4.9.0 (2026-09-05)
 
 ### 变更：Chrome 指纹全栈升到 152（httpcloak v1.6.11 → v1.7.2）
