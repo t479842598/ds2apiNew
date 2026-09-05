@@ -77,3 +77,7 @@ mihomo_subscriptions.json
 
 # Local release/test packages
 dist/
+
+# 预下载的 mihomo 内核（供 Docker 离线构建用），包本身不入库，只保留目录与 README。
+# 只限定这一个目录：写成全局 *.gz 会误伤以后想提交的压缩测试样本。
+docker/mihomo-local/*.gz

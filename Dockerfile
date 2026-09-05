@@ -41,6 +41,11 @@ ARG MIHOMO_MIRROR=
 # （表现为“Package ca-certificates is not available”）。
 ARG APT_MIRROR=
 ARG TARGETARCH
+# 允许离线构建：把预先下载好的 mihomo 压缩包放进 build context 的
+# docker/mihomo-local/ 即可。国内服务器直连 GitHub releases 实测只有 ~10KB/s
+# （17MB 要 27 分钟，常常直接超时失败），而本地代理下载同一文件只要 1 秒。
+# 目录里带一个 .gitkeep，保证没放 .gz 时 COPY 也不会报错（退回线上下载）。
+COPY docker/mihomo-local/ /tmp/mihomo-local/
 RUN set -eux; \
     if [ -n "${APT_MIRROR}" ]; then \
       for f in /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources; do \
@@ -58,10 +63,19 @@ RUN set -eux; \
     RELEASE_URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/${ASSET}"; \
     mkdir -p /out; \
     ok=0; \
-    for url in "${MIHOMO_MIRROR}${RELEASE_URL}" "${RELEASE_URL}"; do \
-      [ -z "${url}" ] && continue; \
-      if curl -fL --retry 3 --connect-timeout 20 -o /tmp/mihomo.gz "${url}"; then ok=1; break; fi; \
+    LOCAL_ASSET=""; \
+    for cand in "/tmp/mihomo-local/${ASSET}" /tmp/mihomo-local/mihomo-linux-${MIHOMO_ARCH}-*.gz; do \
+      if [ -f "${cand}" ]; then LOCAL_ASSET="${cand}"; break; fi; \
     done; \
+    if [ -n "${LOCAL_ASSET}" ]; then \
+      echo "using pre-downloaded mihomo archive: ${LOCAL_ASSET}"; \
+      cp "${LOCAL_ASSET}" /tmp/mihomo.gz; ok=1; \
+    else \
+      for url in "${MIHOMO_MIRROR}${RELEASE_URL}" "${RELEASE_URL}"; do \
+        [ -z "${url}" ] && continue; \
+        if curl -fL --retry 3 --connect-timeout 20 -o /tmp/mihomo.gz "${url}"; then ok=1; break; fi; \
+      done; \
+    fi; \
     [ "${ok}" = "1" ]; \
     gzip -dc /tmp/mihomo.gz > /out/mihomo; \
     rm -f /tmp/mihomo.gz; \

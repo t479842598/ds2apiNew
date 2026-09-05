@@ -217,6 +217,22 @@ healthcheck:
   2. 若你使用 `DS2API_CONFIG_JSON` 启动且不需要运行时落盘，可保持环境变量模式（`DS2API_ENV_WRITEBACK` 关闭）；  
   3. 最新版本中，即使持久化失败，登录/会话测试仍会继续，仅提示“token 未持久化（重启后丢失）”。
 - **构建版本号**：Zeabur / 普通 `docker build` 默认不需要传 `BUILD_VERSION`；镜像会优先使用该构建参数，未提供时自动回退到仓库根目录的 `VERSION` 文件。
+- **国内 / 网络受限的服务器构建**：镜像要拉三次外部资源（Debian 包、Go module、mihomo 内核），
+  直连很容易卡死。可用参数：
+  - `--build-arg APT_MIRROR=http://mirrors.aliyun.com`（必须 **http**，该阶段还没装 ca-certificates）；
+  - `--build-arg GOPROXY=https://goproxy.cn,direct`；
+  - mihomo 内核：实测国内服务器直连 GitHub releases 只有 ~10KB/s（17MB 要 27 分钟、常常直接超时）。
+    在能正常联网的机器上下好对应架构的包，放到仓库的 `docker/mihomo-local/` 再构建即可**完全跳过下载**
+    （该目录里的 `.gz` 不入库，只用于本地/服务器构建）：
+    ```bash
+    # 本地（例如走代理）下载后上传到服务器的 build context
+    curl -fLO https://github.com/MetaCubeX/mihomo/releases/download/v1.19.29/mihomo-linux-amd64-v1.19.29.gz
+    scp mihomo-linux-amd64-v1.19.29.gz server:/opt/ds2api-build/docker/mihomo-local/
+    docker build --build-arg APT_MIRROR=http://mirrors.aliyun.com \
+                 --build-arg GOPROXY=https://goproxy.cn,direct -t ds2api:local .
+    ```
+    没放文件时行为不变（依旧走 `MIHOMO_MIRROR`/直连下载），构建日志里会看到
+    `using pre-downloaded mihomo archive: ...` 代证明本地包生效。
 - **首次登录**：部署完成后访问 `/admin`，使用 Zeabur 环境变量/模板指引中的 `DS2API_ADMIN_KEY` 登录（建议首次登录后自行更换为强密码）。
 
 #### 不使用模板手动部署
