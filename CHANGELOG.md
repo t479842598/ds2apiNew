@@ -1,5 +1,68 @@
 # Changelog
 
+## 4.9.0 (2026-09-05)
+
+### 变更：Chrome 指纹全栈升到 152（httpcloak v1.6.11 → v1.7.2）
+
+**背景/为什么做**：2026-09-05 复核上游，Chrome stable 已到 **153.0.8010.27**（beta 154 / dev 155），
+两周一个版本的节奏已生效，比 8-31 审计预测的“153 全量 09-08”更早；我们自称 151，落后 2 个大版本。
+同时 httpcloak 上游到 v1.7.2，`chrome-*-windows` 预设区间为 **[143, 152]**（**仍无 153**）。
+
+**关键发现（推翻旧假设）**：v1.7.0 changelog 明示 chrome-152 是 *“a real wire change rather than
+a header refresh”* —— ① 新增 compressed CA names TLS 扩展（28 个 CA 短标识 / 184 字节，每次握手
+随机置换顺序）；② signature algorithms 列表头部 placeholder（每握手新取，影响 JA4 第三分量）。
+这直接推翻了 8-31 审计里“150/152 的握手很可能完全相同（未验证）”的假设：既然 151/152 的
+ClientHello **确实不同**，“只改 HTTP 层不动 TLS”的廉价方案就不再可取，必须两层一起升。
+
+**更新了什么**：
+
+- `github.com/sardanioss/httpcloak` v1.6.11 → **v1.7.2**（连带 `utls` v1.10.3 → v1.10.5、
+  `net` v1.2.7 → v1.2.10、`quic-go` v1.2.27 → v1.2.29）。已实测本项目用到的
+  `NewClient` / `WithForceHTTP2` / `WithTLSOnly` / `SetHeaderOrder` 无 breaking change。
+- `constants_shared.json` 的 `chrome.major_version` 151 → **152**。GREASE 串由 4.8.1 的公式
+  自动算出 `"Not?A_Brand";v="24"`，**未新增任何手维护值**（本轮验证了那条改造有效）。
+- 内置回退 `builtinDefaultChromeMajorVersion` 与兜底预设 `chromeDefaultPreset` 同步到 152；
+  JS/Vercel 侧 `BUILTIN_CHROME.majorVersion` 同步 152，两侧读同一 JSON 不漂移。
+- **官网侧无需改动**（一手取证，新旧 bundle 逐字 diff）：bundle 虽重新发布
+  （`commitId 2335d6b → 95255d1`），但 `appVersion` 仍 **2.4.0**，21 个 `x-*` 头全集、PoW
+  （`DeepSeekHashV1` 与 `X-DS-PoW-Response` 载荷）、WAF/CF 判定、40 个 `/api/v0` 端点与 8-31
+  完全一致。`x-client-version`、`x-client-*` 头集合、`x-hif-*` 不发的决策均维持现状。
+- 勘误：`x-settings-token` 经新旧 bundle 对比确认是**旧有头**（上一轮审计漏报，非新增），
+  仅用于 `GET /api/v0/client/settings`、localStorage 有值才发，首个请求本来就没有 → 维持不发。
+
+### 修复：生效 Chrome 版本按 httpcloak 真实预设能力钳制，UA 与 TLS 不可能再错位
+
+**背景**：上一轮（4.8.0）修掉了“改 UA 不改 TLS”，但留了一个更隐蔽的窗口：
+`ResolveChromePreset` 对超出库预设上限的版本会**静默向下探测**。于是把版本设成 153 时，
+HTTP 层声称 153、TLS 实为 `chrome-152-windows` —— 又造出一个真实浏览器里根本不存在的指纹。
+本轮升级依赖时还当场暴露了第二个同类缺陷：写死的下限常量 `chromeLowestPresetMajor = 133`
+在 v1.7.2 里已不存在对应预设（最老已是 143），新加的回归用例立刻抓到“UA 133 / TLS 152”。
+**写死的数字不会跟着依赖变**，这正是本文件反复修的那类问题。
+
+**更新了什么**：
+
+- 新增 `transport.chromeMajorBounds()`：从 `fingerprint.Available()` 枚举 `chrome-<N>-windows`
+  得出真实可用区间（**上下限都不写死**，`chrome-latest-windows` 这类别名由 `Atoi` 自然挡掉）。
+- `ChromeMajorVersion()` 把三个来源（环境变量 / `constants_shared.json` / 内置回退）的请求值
+  统一钳制到该区间，使 **`ChromeMajorVersion() == TLSChromeVersion()` 成为硬不变式**。
+  钳制方向是 **HTTP 层跟随 TLS 能力**：真实浏览器的 UA 与 ClientHello 永远同源，而 TLS 预设
+  受库约束、我们无法凭空造出来，所以唯一能动的就是 HTTP 层。
+- 钳制不再静默：新增 `ChromeVersionClampNotice()`，启动时以 WARN 打印，**点名真实来源**
+  （`DS2API_CHROME_MAJOR_VERSION` / `constants_shared.json` / `builtin default`），并提醒
+  Vercel/Node 侧没有 TLS 预设可对钳、不会等价钳制，因此契约值不应写过库上限。
+- `DS2API_CHROME_MAJOR_VERSION` 的校验降级为**纯格式**（数字且 ∈ [100, 9999]）；
+  “库里有没有该预设”统一交给钳制判断，不再两处规则各说各话。
+- `ResolveChromePreset` 改用同一枚举边界，绕过 `ChromeMajorVersion` 直接调用它的工具代码
+  也不会拿到与声称版本不符的预设。
+- 新增回归用例：`TestChromeMajorVersionNeverContradictsTLSPreset`（穷举 100/133/142/…/999，
+  断言两层版本恒等）、`TestChromeMaxSupportedMajorMatchesDependency`（断言钳制边界确实来自依赖，
+  且边界两侧的存在性符合预期）、`TestClampNoticeNamesTheActualSource`（告警来源标签正确）、
+  `TestChromeMajorVersionClampsAboveCeilingWithNotice` / `...BelowFloor`。
+
+**实测验证**（`tests/wire-capture -ours`）：默认 152 → UA/sec-ch-ua/TLS 三层均 152 且无告警；
+`DS2API_CHROME_MAJOR_VERSION=153` → 两层一起降 152 + WARN；`=133` → 两层均 143 + WARN；
+`=150` → 两层精确 150 无告警。
+
 ## 4.8.1 (2026-08-31)
 
 ### 变更：GREASE 品牌串改为按 Chromium 算法计算，升 Chrome 版本不再需要手维护表

@@ -21,11 +21,16 @@ const DEFAULT_BASE_HEADERS = Object.freeze({
 // ---- Chrome 指纹 ----
 // 唯一权威来源是 Go 侧内嵌的 constants_shared.json（chrome 块）：本文件与
 // internal/deepseek/protocol 读同一文件，从机制上消除“两边各写一份 UA 常量
-// 然后悄悄错开”的漂移。下面的内置值只在 JSON 缺失/不完整时兑底。
+// 然后悄悄错开”的漂移。下面的内置值只在 JSON 缺失/不完整时兜底。
 // 注意：Node 路径（Vercel）走原生 fetch，拿不到 uTLS，TLS/HTTP2 指纹无法伪装，
 // 这里只能保证 HTTP 头自洽。详见 docs/DEPLOY.md 的风险说明。
+//
+// 关于版本上限：Go 侧会把生效大版本钳制到 httpcloak 真实存在的 windows 预设
+// （见 transport.clampChromeMajor），而 Node 侧没有 TLS 预设可对钳，做不到等价钳制。
+// 所以 JSON 里的 chrome.major_version 不得写超过 httpcloak 最高预设的值，
+// 否则两边会漂移（Go 降级、Node 照旧）——Go 启动日志会就此发 warn 提示。
 const BUILTIN_CHROME = Object.freeze({
-  majorVersion: '151',
+  majorVersion: '152',
   greaseFallbackMajor: '152',
   greaseBrands: {
     '150': '"Not;A=Brand";v="8"',

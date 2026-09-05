@@ -61,7 +61,9 @@ var chromeGreaseBrands = map[string]string{
 	"152": "\"Not?A_Brand\";v=\"24\"",
 }
 
-// chromeGreaseFallbackMajor 是版本号无法解析时的回退大版本（最新已知）。
+// chromeGreaseFallbackMajor 是版本号无法解析时的回退大版本。
+// 取 152 而不是「stable 最新（153）」：回退值必须是一个 HTTP 层与 TLS 层
+// 都能自洽的版本，而 httpcloak v1.7.2 的 windows 预设最高只到 152。
 var chromeGreaseFallbackMajor = "152"
 
 // ComputeChromeGreaseBrand 按 Chromium 算法计算给定大版本的 sec-ch-ua GREASE 串。

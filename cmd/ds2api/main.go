@@ -34,6 +34,13 @@ func main() {
 	config.Logger.Info("[chrome] web-client fingerprint",
 		"major", dstransport.ChromeMajorVersion(),
 		"tls_preset", dstransport.ResolvedTLSPresetName())
+	// 钳制是静默降级：不打印的话，运维把契约改成 153 会以为自己在发 153。
+	if notice := dstransport.ChromeVersionClampNotice(); notice != "" {
+		config.Logger.Warn("[chrome] requested Chrome version clamped to httpcloak preset capability",
+			"notice", notice,
+			"effective", dstransport.ChromeMajorVersion(),
+			"tls_preset", dstransport.ResolvedTLSPresetName())
+	}
 	webui.EnsureBuiltOnStartup()
 	_ = auth.AdminKey()
 	app, err := server.NewApp()

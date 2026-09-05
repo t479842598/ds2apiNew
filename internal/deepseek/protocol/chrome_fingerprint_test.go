@@ -120,21 +120,28 @@ func TestComputeChromeGreaseBrandFutureVersions(t *testing.T) {
 }
 
 // TestChromeGreaseBrandComputesUnknownMajor 验证升版不依赖手维护表。
+// 用 149 而不是更新的大版本：ChromeMajorVersion 会把超过 httpcloak 预设上限的
+// 请求值钳制下来（见 transport.clampChromeMajor），153 永远到不了这里；
+// 149 在合法区间内且没进钉值表，正好验证“表里没有也能算”。
 func TestChromeGreaseBrandComputesUnknownMajor(t *testing.T) {
 	orig := trans.ChromeMajorVersion()
 	defer trans.SetChromeMajorVersion(orig)
-	if _, exists := chromeGreaseBrands["153"]; exists {
-		t.Skip("153 is pinned in the contract; nothing to compute")
+	const unpinned = "149"
+	if _, exists := chromeGreaseBrands[unpinned]; exists {
+		t.Skipf("%s is pinned in the contract; nothing to compute", unpinned)
 	}
-	trans.SetChromeMajorVersion("153")
-	want, _ := ComputeChromeGreaseBrand("153")
+	trans.SetChromeMajorVersion(unpinned)
+	if got := trans.ChromeMajorVersion(); got != unpinned {
+		t.Fatalf("requested %s was clamped to %q, cannot exercise the compute path", unpinned, got)
+	}
+	want, _ := ComputeChromeGreaseBrand(unpinned)
 	if got := ChromeGreaseBrand(); got != want {
-		t.Fatalf("ChromeGreaseBrand() for unpinned 153 = %q, want computed %q", got, want)
+		t.Fatalf("ChromeGreaseBrand() for unpinned %s = %q, want computed %q", unpinned, got, want)
 	}
 	// 算出来的串必须带上报的自身大版本，与 sec-ch-ua 其余部分不自相矛盾。
 	scu := chromeSecChUA()
-	if !strings.Contains(scu, "\"Chromium\";v=\"153\"") || !strings.Contains(scu, want) {
-		t.Fatalf("sec-ch-ua for 153 = %q", scu)
+	if !strings.Contains(scu, "\"Chromium\";v=\""+unpinned+"\"") || !strings.Contains(scu, want) {
+		t.Fatalf("sec-ch-ua for %s = %q", unpinned, scu)
 	}
 }
 
