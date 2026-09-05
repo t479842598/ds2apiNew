@@ -11,6 +11,31 @@
 > `constants_shared.json` 单一来源（方案 B 的强化版）。详见
 > `.lrnev/scenes/00-default/specs/02-00-deepseek-upstream-adapt/` 与笔记
 > `v4.8.0-ds2apiNew-Chrome指纹升级151与上游风控识别`。
+>
+> **✅ 第二轮复核（2026-09-05，已发布 v4.9.0 / commit `55984b4`）**——本文结论逐项重验：
+> - **官网侧全部“✅ 未变”依旧成立**：当前 bundle `main.2029023598.js`（`commitId 95255d1`）与本文
+>   取证用的旧 bundle 做**逐字 diff**：`appVersion` 仍 **2.4.0**、21 个 `x-*` 头全集差集为空、
+>   PoW（`DeepSeekHashV1` + `X-DS-PoW-Response` 载荷）、WAF/CF 三分类、40 个 `/api/v0` 端点均一致。
+>   因此本文“不需要动的”清单（`x-client-version`、`x-client-*` 集合、PoW、`x-hif-*` 不发）**全部维持**。
+> - **本文第五节待验证项 1 已关闭**：GREASE 不再是二手结论——v4.8.1 从 Chromium 源码
+>   `user_agent_utils.cc` 确认它是 `major_version_number` 的确定性函数（`seed = major`），
+>   Go/JS 两侧改为按公式计算，升版不再手补表（F-03）。
+> - **本文第五节待验证项 2 的“未验证”前提被推翻**：文中“Chrome 的 ClientHello 变化很慢，
+>   150/152 的握手很可能完全相同”是错的——httpcloak v1.7.0 changelog 明示 chrome-152 是
+>   *“a real wire change rather than a header refresh”*（新增 compressed CA names 扩展 +
+>   sigalg 头部 placeholder，影哿 JA4）。所以**方案 A（只改 HTTP 层）不再可选**，
+>   必须两层一起升。实际落地：httpcloak v1.6.11 → v1.7.2、`major_version` 151 → **152**（方案 B 重跑）。
+> - **Chrome 日程比本文预测更快**：stable 已到 **153.0.8010.27**（本文预测 153 全量 09-08，
+>   实际 09-05 前已全量并出了 hotfix），两周节奏已生效。httpcloak v1.7.2 的
+>   `chrome-*-windows` 区间为 **[143, 152]**（**无 153**），所以本轮停在 152、落后 stable 一版。
+> - **额外修掉一个本文未预见的缺口（F-05）**：#13 的修复不彻底——`ResolveChromePreset` 对超出
+>   库上限的版本**静默向下探测**，于是设 153 会造出“UA 153 / TLS 152”。现改为从
+>   `fingerprint.Available()` 枚举真实区间并**钳制 HTTP 层跟随 TLS 能力**，
+>   `ChromeMajorVersion() == TLSChromeVersion()` 成为硬不变式，钳制时打 WARN 点名来源。
+>   升级过程中还当场暴露了同类缺陷：写死的 `chromeLowestPresetMajor = 133` 在 v1.7.2 已无预设。
+> - **勘误（本文 2.1 节表头未列）**：`x-settings-token` 经新旧 bundle 对比确认是**旧有头**，
+>   不是新增（本文取证时漏报）。仅用于 `GET /api/v0/client/settings`、localStorage 有值才发，
+>   首个请求本来就没有 → 维持不发。
 
 ---
 
