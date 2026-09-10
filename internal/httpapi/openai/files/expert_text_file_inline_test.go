@@ -80,7 +80,7 @@ func TestPreprocessInlineTextFilesForExpert_NonExpert(t *testing.T) {
 	}}
 	h := &Handler{Store: expertInlineMockStore{}, ContentStore: store}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",

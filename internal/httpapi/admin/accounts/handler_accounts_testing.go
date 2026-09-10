@@ -41,7 +41,7 @@ func (h *Handler) testSingleAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	model, _ := req["model"].(string)
 	if model == "" {
-		model = "deepseek-v4-flash"
+		model = "deepseek-flash"
 	}
 	message, _ := req["message"].(string)
 	result := h.testAccount(r.Context(), acc, model, message)
@@ -53,7 +53,7 @@ func (h *Handler) testAllAccounts(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewDecoder(r.Body).Decode(&req)
 	model, _ := req["model"].(string)
 	if model == "" {
-		model = "deepseek-v4-flash"
+		model = "deepseek-flash"
 	}
 	accounts := h.Store.Snapshot().Accounts
 	if len(accounts) == 0 {
@@ -219,7 +219,7 @@ func (h *Handler) testAPI(w http.ResponseWriter, r *http.Request) {
 	message, _ := req["message"].(string)
 	apiKey, _ := req["api_key"].(string)
 	if model == "" {
-		model = "deepseek-v4-flash"
+		model = "deepseek-flash"
 	}
 	if message == "" {
 		message = "你好"

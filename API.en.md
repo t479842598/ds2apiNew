@@ -206,14 +206,14 @@ No auth required. Returns the currently supported DeepSeek native model list.
 {
   "object": "list",
   "data": [
-    {"id": "deepseek-v4-flash", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-flash-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-flash", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-flash-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
     {"id": "deepseek-v4-pro", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
     {"id": "deepseek-v4-pro-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-flash-search", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-flash-search-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-vision", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-vision-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []}
+    {"id": "deepseek-flash-search", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-flash-search-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-vision", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-vision-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []}
   ]
 }
 ```
@@ -239,7 +239,7 @@ Built-in aliases come from `internal/config/models.go`; `config.model_aliases` c
 
 Aliases with a `-nothinking` suffix also map to the corresponding forced no-thinking DeepSeek model.
 
-Current vision support resolves only to `deepseek-v4-vision` and does not expose a separate `vision-search` variant.
+Current vision support resolves only to `deepseek-vision` and does not expose a separate `vision-search` variant.
 
 Retired historical families such as `claude-1.*`, `claude-2.*`, `claude-instant-*`, and `gpt-3.5*` are explicitly rejected.
 
@@ -635,7 +635,7 @@ Example response:
 
 ```json
 {
-  "id": "deepseek-v4-flash",
+  "id": "deepseek-flash",
   "capabilities": ["tools", "thinking"]
 }
 ```
@@ -727,7 +727,7 @@ Returns sanitized config, including both `keys` and `api_keys`.
     }
   ],
   "model_aliases": {
-    "claude-sonnet-4-6": "deepseek-v4-flash",
+    "claude-sonnet-4-6": "deepseek-flash",
     "claude-opus-4-6": "deepseek-v4-pro"
   }
 }
@@ -751,7 +751,7 @@ If both `api_keys` and `keys` are sent, the structured `api_keys` entries win so
     {"email": "user@example.com", "password": "pwd", "token": ""}
   ],
   "model_aliases": {
-    "claude-sonnet-4-6": "deepseek-v4-flash",
+    "claude-sonnet-4-6": "deepseek-flash",
     "claude-opus-4-6": "deepseek-v4-pro"
   }
 }
@@ -962,7 +962,7 @@ Updates proxy binding for a specific account.
 | Field | Required | Notes |
 | --- | --- | --- |
 | `identifier` | ✅ | email / mobile / token-only synthetic id |
-| `model` | ❌ | default `deepseek-v4-flash` |
+| `model` | ❌ | default `deepseek-flash` |
 | `message` | ❌ | if empty, only session creation is tested |
 
 **Response**:
@@ -973,7 +973,7 @@ Updates proxy binding for a specific account.
   "success": true,
   "response_time": 1240,
   "message": "API test successful (session creation only)",
-  "model": "deepseek-v4-flash",
+  "model": "deepseek-flash",
   "session_count": 0,
   "config_writable": true,
   "config_warning": ""
@@ -1047,7 +1047,7 @@ Test API availability through the service itself.
 
 | Field | Required | Default |
 | --- | --- | --- |
-| `model` | ❌ | `deepseek-v4-flash` |
+| `model` | ❌ | `deepseek-flash` |
 | `message` | ❌ | `你好` |
 | `api_key` | ❌ | First key in config |
 
@@ -1071,7 +1071,7 @@ Common request fields:
 | --- | --- | --- | --- |
 | `message` | No | `你好` | Convenience single-turn user message |
 | `messages` | No | Auto-derived from `message` | OpenAI-style message array |
-| `model` | No | `deepseek-v4-flash` | Target model |
+| `model` | No | `deepseek-flash` | Target model |
 | `stream` | No | `true` | Recommended to keep streaming enabled so raw SSE is recorded |
 | `api_key` | No | First configured key | Business API key to use |
 | `sample_id` | No | Auto-generated | Sample directory name |
@@ -1281,7 +1281,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "Hello"}],
     "stream": false
   }'
@@ -1332,7 +1332,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash-search",
+    "model": "deepseek-flash-search",
     "messages": [{"role": "user", "content": "Latest news today"}],
     "stream": true
   }'
@@ -1345,7 +1345,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "What is the weather in Beijing?"}],
     "tools": [
       {
@@ -1443,7 +1443,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "X-Ds2-Target-Account: user@example.com" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "Hello"}]
   }'
 ```

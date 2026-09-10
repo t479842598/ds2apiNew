@@ -1,5 +1,44 @@
 # Changelog
 
+## 4.10.0 (2026-09-10)
+
+### 变更：模型 ID 对齐官方 V4.1-Flash 命名，旧 `deepseek-v4-*` ID 退役
+
+**背景**：2026-09-10 官方发布 **DeepSeek-V4.1-Flash**，主模型 API ID 改为 **`deepseek-flash`**；
+原有 `deepseek-v4-flash`、`deepseek-v4-flash-search`、`deepseek-v4-vision` 等旧 ID 已退役
+（`deepseek-v4-pro` 暂保留，官方 09-14 起会把它路由到 V4.1-Flash 并按 flash 计费）。
+Web 协议本身不区分“模型 ID”：chat.deepseek.com 的 completion 请求只有
+`model_type`（`default` / `expert` / `vision`）三档，模型 ID 是本项目对外暴露的别名层，
+因此本次只改别名/白名单层，**不动请求头、版本号与 PoW**。
+
+**同步复核结论（本次一并取证）**：
+- `x-client-version` 仍为 **`2.4.0`**，与官方 bundle `main.5748b4eb39.js` 硬编码字面量逐字一致；
+  `x-client-*` 五件套集合无新增，**request header 侧无需任何改动**。
+- 官方 bundle 新增 `X-DS-Guest-PoW-Response`（guest 注册/短信验证码流程），本项目走已登录
+  token + 密码登录路径，**不涉及 guest 流程，维持单 `X-DS-PoW-Response`**。
+- Chrome 指纹维持 **152**（httpcloak v1.7.2 上限，仍落后 stable 一版，属有意钳制）。
+
+**变更内容**：
+- `internal/config/models.go`：模型清单改为 `deepseek-flash` / `deepseek-v4-pro` /
+  `deepseek-flash-search` / `deepseek-vision`，`GetModelConfig`、`GetModelType`、
+  `OllamaCapabilitiesModels`、全部默认 alias 目标同步更新；旧 `deepseek-v4-flash*` /
+  `deepseek-v4-vision*` 不再解析，请求旧 ID 返回 `invalid_request_error`。
+- `internal/promptcompat/image_route.go`：`auto_route_vision` 的路由目标常量改为
+  `deepseek-vision`（`-nothinking` 变体自动跟随）。
+- 默认模型处同步：`internal/claudeconv/convert.go`、`admin/rawsamples`、
+  `admin/accounts` 测试接口、webui API Tester 默认值。
+- 文档与示例：`README.md`、`API.md` / `API.en.md`、`docs/DEPLOY*.md`、
+  `docs/prompt-compatibility.md`、`config.example.json`。
+- 测试：新增 `TestResolveModelRejectsRetiredV4IDs`（断言旧 ID 被拒），其余测试样本
+  与断言同步到新 ID。
+
+### 兼容性说明
+
+这是**破坏性变更**：请求 `deepseek-v4-flash` 等旧 ID 的客户端需改用 `deepseek-flash`
+（或任一内置 alias，如 `gpt-4o`、`claude-sonnet-4-6`）。如需保留旧 ID 可用，
+在 `config.json` 的 `model_aliases` 中显式加一条映射，例如
+`"deepseek-v4-flash": "deepseek-flash"`。
+
 ## 4.9.1 (2026-09-05)
 
 ### 新增：Vercel/Node 路径获得与 Go 等价的 Chrome 版本钳制

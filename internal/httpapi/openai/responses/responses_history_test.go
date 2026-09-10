@@ -76,7 +76,7 @@ func TestResponsesRecordsResponseHistory(t *testing.T) {
 	r := chi.NewRouter()
 	RegisterRoutes(r, h)
 
-	req := httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader(`{"model":"deepseek-v4-flash","input":"hello responses"}`))
+	req := httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader(`{"model":"deepseek-flash","input":"hello responses"}`))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()

@@ -43,7 +43,7 @@ func (r *Runner) caseMissingMessages(ctx context.Context, cc *caseContext) error
 			"Authorization": "Bearer " + r.apiKey,
 		},
 		Body: map[string]any{
-			"model":  "deepseek-v4-flash",
+			"model":  "deepseek-flash",
 			"stream": false,
 		},
 		Retryable: true,
@@ -125,7 +125,7 @@ func (r *Runner) caseTokenRefreshManagedAccount(ctx context.Context, cc *caseCon
 			"X-Ds2-Target-Account": id,
 		},
 		Body: map[string]any{
-			"model": "deepseek-v4-flash",
+			"model": "deepseek-flash",
 			"messages": []map[string]any{
 				{"role": "user", "content": "token refresh test"},
 			},

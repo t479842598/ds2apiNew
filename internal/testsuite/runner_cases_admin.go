@@ -80,7 +80,7 @@ func (r *Runner) caseAdminAccountTest(ctx context.Context, cc *caseContext) erro
 		},
 		Body: map[string]any{
 			"identifier": r.accountID,
-			"model":      "deepseek-v4-flash",
+			"model":      "deepseek-flash",
 			"message":    "ping",
 		},
 		Retryable: true,

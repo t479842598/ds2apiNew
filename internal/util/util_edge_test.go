@@ -344,27 +344,27 @@ func TestConvertClaudeToDeepSeekOpusUsesGlobalAlias(t *testing.T) {
 }
 
 func TestConvertClaudeToDeepSeekUsesExplicitModelAlias(t *testing.T) {
-	t.Setenv("DS2API_CONFIG_JSON", `{"keys":[],"accounts":[],"model_aliases":{"claude-sonnet-4-6":"deepseek-v4-flash-search"}}`)
+	t.Setenv("DS2API_CONFIG_JSON", `{"keys":[],"accounts":[],"model_aliases":{"claude-sonnet-4-6":"deepseek-flash-search"}}`)
 	store := config.LoadStore()
 	req := map[string]any{
 		"model":    "claude-sonnet-4-6",
 		"messages": []any{map[string]any{"role": "user", "content": "Hi"}},
 	}
 	out := ConvertClaudeToDeepSeek(req, store)
-	if out["model"] != "deepseek-v4-flash-search" {
+	if out["model"] != "deepseek-flash-search" {
 		t.Fatalf("expected explicit alias override, got %q", out["model"])
 	}
 }
 
 func TestConvertClaudeToDeepSeekUsesExplicitNoThinkingModelAlias(t *testing.T) {
-	t.Setenv("DS2API_CONFIG_JSON", `{"keys":[],"accounts":[],"model_aliases":{"claude-sonnet-4-6":"deepseek-v4-flash-search"}}`)
+	t.Setenv("DS2API_CONFIG_JSON", `{"keys":[],"accounts":[],"model_aliases":{"claude-sonnet-4-6":"deepseek-flash-search"}}`)
 	store := config.LoadStore()
 	req := map[string]any{
 		"model":    "claude-sonnet-4-6-nothinking",
 		"messages": []any{map[string]any{"role": "user", "content": "Hi"}},
 	}
 	out := ConvertClaudeToDeepSeek(req, store)
-	if out["model"] != "deepseek-v4-flash-search-nothinking" {
+	if out["model"] != "deepseek-flash-search-nothinking" {
 		t.Fatalf("expected explicit alias override with nothinking suffix, got %q", out["model"])
 	}
 }

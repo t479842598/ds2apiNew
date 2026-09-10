@@ -108,7 +108,7 @@ func TestApplyCurrentInputFileSkipsShortInputWhenThresholdNotReached(t *testing.
 		DS: ds,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "hello"},
 		},
@@ -139,7 +139,7 @@ func TestApplyThinkingInjectionAppendsLatestUserPrompt(t *testing.T) {
 		DS: ds,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "hello"},
 		},
@@ -171,7 +171,7 @@ func TestApplyThinkingInjectionUsesCustomPrompt(t *testing.T) {
 		DS: ds,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "hello"},
 		},
@@ -199,7 +199,7 @@ func TestApplyCurrentInputFileDisabledPassThrough(t *testing.T) {
 		DS: ds,
 	}
 	req := map[string]any{
-		"model":    "deepseek-v4-vision",
+		"model":    "deepseek-vision",
 		"messages": historySplitTestMessages(),
 	}
 	stdReq, err := promptcompat.NormalizeOpenAIChatRequest(h.Store, req, "")
@@ -233,7 +233,7 @@ func TestApplyCurrentInputFileUploadsFirstTurnWithNumberedHistoryTranscript(t *t
 		DS: ds,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "first turn content that is long enough"},
 		},
@@ -303,7 +303,7 @@ func TestApplyCurrentInputFilePreservesFullContextPromptForTokenCounting(t *test
 		DS: ds,
 	}
 	req := map[string]any{
-		"model":    "deepseek-v4-vision",
+		"model":    "deepseek-vision",
 		"messages": historySplitTestMessages(),
 	}
 	stdReq, err := promptcompat.NormalizeOpenAIChatRequest(h.Store, req, "")
@@ -348,7 +348,7 @@ func TestApplyCurrentInputFileUploadsFullContextFile(t *testing.T) {
 		DS: ds,
 	}
 	req := map[string]any{
-		"model":    "deepseek-v4-vision",
+		"model":    "deepseek-vision",
 		"messages": historySplitTestMessages(),
 	}
 	stdReq, err := promptcompat.NormalizeOpenAIChatRequest(h.Store, req, "")
@@ -397,7 +397,7 @@ func TestApplyCurrentInputFileUploadsToolsContextSeparately(t *testing.T) {
 		DS: ds,
 	}
 	req := map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"tools": []any{
 			map[string]any{
@@ -472,7 +472,7 @@ func TestApplyCurrentInputFileCarriesHistoryText(t *testing.T) {
 		DS: ds,
 	}
 	req := map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 	}
 	stdReq, err := promptcompat.NormalizeOpenAIChatRequest(h.Store, req, "")
@@ -505,7 +505,7 @@ func TestChatCompletionsCurrentInputFileUploadsContextAndKeepsNeutralPrompt(t *t
 		DS:   ds,
 	}
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   false,
 	})
@@ -559,7 +559,7 @@ func TestChatCompletionsCurrentInputFileUploadsContextAndKeepsNeutralPrompt(t *t
 	}
 	usage, _ := body["usage"].(map[string]any)
 	promptTokens := int(usage["prompt_tokens"].(float64))
-	neutralCount := util.CountPromptTokens(promptText, "deepseek-v4-flash")
+	neutralCount := util.CountPromptTokens(promptText, "deepseek-flash")
 	if promptTokens <= neutralCount {
 		t.Fatalf("expected prompt_tokens to exceed neutral live prompt count (includes file context), got=%d neutral=%d", promptTokens, neutralCount)
 	}
@@ -577,7 +577,7 @@ func TestResponsesCurrentInputFileUploadsContextAndKeepsNeutralPrompt(t *testing
 	r := chi.NewRouter()
 	registerOpenAITestRoutes(r, h)
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   false,
 	})
@@ -614,7 +614,7 @@ func TestResponsesCurrentInputFileUploadsContextAndKeepsNeutralPrompt(t *testing
 	}
 	usage, _ := body["usage"].(map[string]any)
 	inputTokens := int(usage["input_tokens"].(float64))
-	neutralCount := util.CountPromptTokens(promptText, "deepseek-v4-flash")
+	neutralCount := util.CountPromptTokens(promptText, "deepseek-flash")
 	if inputTokens <= neutralCount {
 		t.Fatalf("expected input_tokens to exceed neutral live prompt count (includes file context), got=%d neutral=%d", inputTokens, neutralCount)
 	}
@@ -632,7 +632,7 @@ func TestResponsesCurrentInputFileUploadsToolsSeparately(t *testing.T) {
 	r := chi.NewRouter()
 	registerOpenAITestRoutes(r, h)
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"tools": []any{
 			map[string]any{
@@ -698,7 +698,7 @@ func TestChatCompletionsCurrentInputFileMapsManagedAuthFailureTo401(t *testing.T
 		DS:   ds,
 	}
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   false,
 	})
@@ -731,7 +731,7 @@ func TestResponsesCurrentInputFileMapsDirectAuthFailureTo401(t *testing.T) {
 	r := chi.NewRouter()
 	registerOpenAITestRoutes(r, h)
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   false,
 	})
@@ -760,7 +760,7 @@ func TestChatCompletionsCurrentInputFileUploadFailureReturnsInternalServerError(
 		DS:   ds,
 	}
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   false,
 	})
@@ -789,7 +789,7 @@ func TestCurrentInputFileWorksAcrossAutoDeleteModes(t *testing.T) {
 				DS:   ds,
 			}
 			reqBody, _ := json.Marshal(map[string]any{
-				"model":    "deepseek-v4-flash",
+				"model":    "deepseek-flash",
 				"messages": historySplitTestMessages(),
 				"stream":   false,
 			})

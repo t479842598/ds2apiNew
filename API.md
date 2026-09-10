@@ -208,14 +208,14 @@ OpenAI `/v1/*` 仍是规范路径。对于只配置 DS2API 根地址的客户端
 {
   "object": "list",
   "data": [
-    {"id": "deepseek-v4-flash", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-flash-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-flash", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-flash-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
     {"id": "deepseek-v4-pro", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
     {"id": "deepseek-v4-pro-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-flash-search", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-flash-search-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-vision", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
-    {"id": "deepseek-v4-vision-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []}
+    {"id": "deepseek-flash-search", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-flash-search-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-vision", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []},
+    {"id": "deepseek-vision-nothinking", "object": "model", "created": 1677610602, "owned_by": "deepseek", "permission": []}
   ]
 }
 ```
@@ -240,9 +240,9 @@ OpenAI `/v1/*` 仍是规范路径。对于只配置 DS2API 根地址的客户端
 - 其他内置精确 alias：`llama-3.1-70b-instruct`、`qwen-max`
 
 上述 alias 若在请求名后追加 `-nothinking` 后缀，也会映射到对应的强制关闭 thinking 版本。
-当前视觉能力仅对应 `deepseek-v4-vision` / `deepseek-v4-vision-nothinking`，不会解析出独立的 `vision-search` 变体。
+当前视觉能力仅对应 `deepseek-vision` / `deepseek-vision-nothinking`，不会解析出独立的 `vision-search` 变体。
 
-退役历史模型（如 `claude-1.*`、`claude-2.*`、`claude-instant-*`、`gpt-3.5*`）会被显式拒绝。
+退役历史模型（如 `deepseek-v4-flash`、`deepseek-v4-vision`、`deepseek-v4-flash-search` 等旧 ID，以及 `claude-1.*`、`claude-2.*`、`claude-instant-*`、`gpt-3.5*`）会被显式拒绝。
 
 ### `POST /v1/chat/completions`
 
@@ -641,7 +641,7 @@ data: {"type":"message_stop"}
 
 ```json
 {
-  "id": "deepseek-v4-flash",
+  "id": "deepseek-flash",
   "capabilities": ["tools", "thinking"]
 }
 ```
@@ -733,7 +733,7 @@ data: {"type":"message_stop"}
     }
   ],
   "model_aliases": {
-    "claude-sonnet-4-6": "deepseek-v4-flash",
+    "claude-sonnet-4-6": "deepseek-flash",
     "claude-opus-4-6": "deepseek-v4-pro"
   }
 }
@@ -757,7 +757,7 @@ data: {"type":"message_stop"}
     {"email": "user@example.com", "password": "pwd", "token": ""}
   ],
   "model_aliases": {
-    "claude-sonnet-4-6": "deepseek-v4-flash",
+    "claude-sonnet-4-6": "deepseek-flash",
     "claude-opus-4-6": "deepseek-v4-pro"
   }
 }
@@ -971,7 +971,7 @@ data: {"type":"message_stop"}
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
 | `identifier` | ✅ | email / mobile / token-only 合成标识 |
-| `model` | ❌ | 默认 `deepseek-v4-flash` |
+| `model` | ❌ | 默认 `deepseek-flash` |
 | `message` | ❌ | 空字符串时仅测试会话创建 |
 
 **响应**：
@@ -982,7 +982,7 @@ data: {"type":"message_stop"}
   "success": true,
   "response_time": 1240,
   "message": "API 测试成功（仅会话创建）",
-  "model": "deepseek-v4-flash",
+  "model": "deepseek-flash",
   "session_count": 0,
   "config_writable": true,
   "config_warning": ""
@@ -1055,7 +1055,7 @@ data: {"type":"message_stop"}
 
 | 字段 | 必填 | 默认值 |
 | --- | --- | --- |
-| `model` | ❌ | `deepseek-v4-flash` |
+| `model` | ❌ | `deepseek-flash` |
 | `message` | ❌ | `你好` |
 | `api_key` | ❌ | 配置中第一个 key |
 
@@ -1079,7 +1079,7 @@ data: {"type":"message_stop"}
 | --- | --- | --- | --- |
 | `message` | 否 | `你好` | 便捷单轮用户消息 |
 | `messages` | 否 | 自动由 `message` 生成 | OpenAI 风格消息数组 |
-| `model` | 否 | `deepseek-v4-flash` | 目标模型 |
+| `model` | 否 | `deepseek-flash` | 目标模型 |
 | `stream` | 否 | `true` | 建议保留流式，以记录原始 SSE |
 | `api_key` | 否 | 配置中第一个 key | 调用业务接口使用的 key |
 | `sample_id` | 否 | 自动生成 | 样本目录名 |
@@ -1289,7 +1289,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "你好"}],
     "stream": false
   }'
@@ -1340,7 +1340,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash-search",
+    "model": "deepseek-flash-search",
     "messages": [{"role": "user", "content": "今天的新闻"}],
     "stream": true
   }'
@@ -1353,7 +1353,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "北京今天天气怎么样？"}],
     "tools": [
       {
@@ -1451,7 +1451,7 @@ curl http://localhost:5001/v1/chat/completions \
   -H "X-Ds2-Target-Account: user@example.com" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "deepseek-v4-flash",
+    "model": "deepseek-flash",
     "messages": [{"role": "user", "content": "你好"}]
   }'
 ```

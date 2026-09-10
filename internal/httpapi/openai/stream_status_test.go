@@ -165,7 +165,7 @@ func TestChatCompletionsStreamStatusCapturedAs200(t *testing.T) {
 	r.Use(captureStatusMiddleware(&statuses))
 	registerOpenAITestRoutes(r, h)
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}],"stream":true}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":"hi"}],"stream":true}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -194,7 +194,7 @@ func TestResponsesStreamStatusCapturedAs200(t *testing.T) {
 	r.Use(captureStatusMiddleware(&statuses))
 	registerOpenAITestRoutes(r, h)
 
-	reqBody := `{"model":"deepseek-v4-flash","input":"hi","stream":true}`
+	reqBody := `{"model":"deepseek-flash","input":"hi","stream":true}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -227,7 +227,7 @@ func TestChatCompletionsStreamContentFilterStopsNormallyWithoutLeak(t *testing.T
 	r.Use(captureStatusMiddleware(&statuses))
 	registerOpenAITestRoutes(r, h)
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}],"stream":true}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":"hi"}],"stream":true}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -273,7 +273,7 @@ func TestChatCompletionsStreamEmitsFailureFrameWhenUpstreamOutputEmpty(t *testin
 	r.Use(captureStatusMiddleware(&statuses))
 	registerOpenAITestRoutes(r, h)
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}],"stream":true}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":"hi"}],"stream":true}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -414,7 +414,7 @@ func TestChatCompletionsContentFilterDoesNotRetry(t *testing.T) {
 		Auth:  streamStatusAuthStub{},
 		DS:    ds,
 	}
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hi"}],"stream":false}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":"hi"}],"stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -443,7 +443,7 @@ func TestResponsesStreamUsageIgnoresBatchAccumulatedTokenUsage(t *testing.T) {
 	r.Use(captureStatusMiddleware(&statuses))
 	registerOpenAITestRoutes(r, h)
 
-	reqBody := `{"model":"deepseek-v4-flash","input":"hi","stream":true}`
+	reqBody := `{"model":"deepseek-flash","input":"hi","stream":true}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -591,7 +591,7 @@ func TestResponsesNonStreamUsageIgnoresPromptAndOutputTokenUsage(t *testing.T) {
 	r.Use(captureStatusMiddleware(&statuses))
 	registerOpenAITestRoutes(r, h)
 
-	reqBody := `{"model":"deepseek-v4-flash","input":"hi","stream":false}`
+	reqBody := `{"model":"deepseek-flash","input":"hi","stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")

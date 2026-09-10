@@ -7,44 +7,44 @@ type mockModelAliasReader map[string]string
 func (m mockModelAliasReader) ModelAliases() map[string]string { return m }
 
 func TestResolveModelDirectDeepSeek(t *testing.T) {
-	got, ok := ResolveModel(nil, "deepseek-v4-flash")
-	if !ok || got != "deepseek-v4-flash" {
-		t.Fatalf("expected deepseek-v4-flash, got ok=%v model=%q", ok, got)
+	got, ok := ResolveModel(nil, "deepseek-flash")
+	if !ok || got != "deepseek-flash" {
+		t.Fatalf("expected deepseek-flash, got ok=%v model=%q", ok, got)
 	}
 }
 
 func TestResolveModelDirectDeepSeekNoThinking(t *testing.T) {
-	got, ok := ResolveModel(nil, "deepseek-v4-flash-nothinking")
-	if !ok || got != "deepseek-v4-flash-nothinking" {
-		t.Fatalf("expected deepseek-v4-flash-nothinking, got ok=%v model=%q", ok, got)
+	got, ok := ResolveModel(nil, "deepseek-flash-nothinking")
+	if !ok || got != "deepseek-flash-nothinking" {
+		t.Fatalf("expected deepseek-flash-nothinking, got ok=%v model=%q", ok, got)
 	}
 }
 
 func TestResolveModelAlias(t *testing.T) {
 	got, ok := ResolveModel(nil, "gpt-4.1")
-	if !ok || got != "deepseek-v4-flash" {
-		t.Fatalf("expected alias gpt-4.1 -> deepseek-v4-flash, got ok=%v model=%q", ok, got)
+	if !ok || got != "deepseek-flash" {
+		t.Fatalf("expected alias gpt-4.1 -> deepseek-flash, got ok=%v model=%q", ok, got)
 	}
 }
 
 func TestResolveLatestOpenAIAlias(t *testing.T) {
 	got, ok := ResolveModel(nil, "gpt-5.5")
-	if !ok || got != "deepseek-v4-flash" {
-		t.Fatalf("expected alias gpt-5.5 -> deepseek-v4-flash, got ok=%v model=%q", ok, got)
+	if !ok || got != "deepseek-flash" {
+		t.Fatalf("expected alias gpt-5.5 -> deepseek-flash, got ok=%v model=%q", ok, got)
 	}
 }
 
 func TestResolveLatestClaudeAlias(t *testing.T) {
 	got, ok := ResolveModel(nil, "claude-sonnet-4-6")
-	if !ok || got != "deepseek-v4-flash" {
-		t.Fatalf("expected alias claude-sonnet-4-6 -> deepseek-v4-flash, got ok=%v model=%q", ok, got)
+	if !ok || got != "deepseek-flash" {
+		t.Fatalf("expected alias claude-sonnet-4-6 -> deepseek-flash, got ok=%v model=%q", ok, got)
 	}
 }
 
 func TestResolveLatestClaudeAliasNoThinking(t *testing.T) {
 	got, ok := ResolveModel(nil, "claude-sonnet-4-6-nothinking")
-	if !ok || got != "deepseek-v4-flash-nothinking" {
-		t.Fatalf("expected alias claude-sonnet-4-6-nothinking -> deepseek-v4-flash-nothinking, got ok=%v model=%q", ok, got)
+	if !ok || got != "deepseek-flash-nothinking" {
+		t.Fatalf("expected alias claude-sonnet-4-6-nothinking -> deepseek-flash-nothinking, got ok=%v model=%q", ok, got)
 	}
 }
 
@@ -54,16 +54,16 @@ func TestResolveExpandedHistoricalAliases(t *testing.T) {
 		model string
 		want  string
 	}{
-		{name: "openai old chatgpt", model: "chatgpt-4o", want: "deepseek-v4-flash"},
+		{name: "openai old chatgpt", model: "chatgpt-4o", want: "deepseek-flash"},
 		{name: "openai codex max", model: "gpt-5.1-codex-max", want: "deepseek-v4-pro"},
-		{name: "openai deep research", model: "o3-deep-research", want: "deepseek-v4-flash-search"},
+		{name: "openai deep research", model: "o3-deep-research", want: "deepseek-flash-search"},
 		{name: "openai historical reasoning", model: "o1-preview", want: "deepseek-v4-pro"},
-		{name: "claude latest historical", model: "claude-3-5-sonnet-latest", want: "deepseek-v4-flash"},
+		{name: "claude latest historical", model: "claude-3-5-sonnet-latest", want: "deepseek-flash"},
 		{name: "claude historical opus", model: "claude-3-opus-20240229", want: "deepseek-v4-pro"},
-		{name: "claude historical haiku", model: "claude-3-haiku-20240307", want: "deepseek-v4-flash"},
-		{name: "gemini latest alias", model: "gemini-flash-latest", want: "deepseek-v4-flash"},
+		{name: "claude historical haiku", model: "claude-3-haiku-20240307", want: "deepseek-flash"},
+		{name: "gemini latest alias", model: "gemini-flash-latest", want: "deepseek-flash"},
 		{name: "gemini historical pro", model: "gemini-1.5-pro", want: "deepseek-v4-pro"},
-		{name: "gemini vision legacy", model: "gemini-pro-vision", want: "deepseek-v4-vision"},
+		{name: "gemini vision legacy", model: "gemini-pro-vision", want: "deepseek-vision"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -106,6 +106,22 @@ func TestResolveModelRejectsLegacyDeepSeekIDs(t *testing.T) {
 	}
 }
 
+func TestResolveModelRejectsRetiredV4IDs(t *testing.T) {
+	retiredModels := []string{
+		"deepseek-v4-flash",
+		"deepseek-v4-flash-nothinking",
+		"deepseek-v4-flash-search",
+		"deepseek-v4-flash-search-nothinking",
+		"deepseek-v4-vision",
+		"deepseek-v4-vision-nothinking",
+	}
+	for _, model := range retiredModels {
+		if got, ok := ResolveModel(nil, model); ok {
+			t.Fatalf("expected retired model %q to be rejected, got %q", model, got)
+		}
+	}
+}
+
 func TestResolveModelRejectsRetiredHistoricalModels(t *testing.T) {
 	retiredModels := []string{
 		"claude-2.1",
@@ -128,19 +144,19 @@ func TestResolveModelDirectDeepSeekExpert(t *testing.T) {
 
 func TestResolveModelCustomAliasToExpert(t *testing.T) {
 	got, ok := ResolveModel(mockModelAliasReader{
-		"my-expert-model": "deepseek-v4-flash-search",
+		"my-expert-model": "deepseek-flash-search",
 	}, "my-expert-model")
-	if !ok || got != "deepseek-v4-flash-search" {
-		t.Fatalf("expected alias -> deepseek-v4-flash-search, got ok=%v model=%q", ok, got)
+	if !ok || got != "deepseek-flash-search" {
+		t.Fatalf("expected alias -> deepseek-flash-search, got ok=%v model=%q", ok, got)
 	}
 }
 
 func TestResolveModelCustomAliasToVision(t *testing.T) {
 	got, ok := ResolveModel(mockModelAliasReader{
-		"my-vision-model": "deepseek-v4-vision",
+		"my-vision-model": "deepseek-vision",
 	}, "my-vision-model")
-	if !ok || got != "deepseek-v4-vision" {
-		t.Fatalf("expected alias -> deepseek-v4-vision, got ok=%v model=%q", ok, got)
+	if !ok || got != "deepseek-vision" {
+		t.Fatalf("expected alias -> deepseek-vision, got ok=%v model=%q", ok, got)
 	}
 }
 

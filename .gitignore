@@ -39,6 +39,12 @@ internal/webui/assets/admin/
 # Go compiled binaries
 ds2api
 ds2api-tests
+ds2api-*
+ds2api_*
+
+# 本地工具/产物（不入库）
+.dsh-file-claim/
+.lrnev/
 
 # Environment
 .env.local

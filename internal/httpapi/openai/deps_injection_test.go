@@ -54,7 +54,7 @@ func (m mockOpenAIConfig) AutoRouteVisionEnabled() bool                         
 func TestNormalizeOpenAIChatRequestWithConfigInterface(t *testing.T) {
 	cfg := mockOpenAIConfig{
 		aliases: map[string]string{
-			"my-model": "deepseek-v4-flash-search",
+			"my-model": "deepseek-flash-search",
 		},
 	}
 	req := map[string]any{
@@ -65,7 +65,7 @@ func TestNormalizeOpenAIChatRequestWithConfigInterface(t *testing.T) {
 	if err != nil {
 		t.Fatalf("promptcompat.NormalizeOpenAIChatRequest error: %v", err)
 	}
-	if out.ResolvedModel != "deepseek-v4-flash-search" {
+	if out.ResolvedModel != "deepseek-flash-search" {
 		t.Fatalf("resolved model mismatch: got=%q", out.ResolvedModel)
 	}
 	if !out.Search || !out.Thinking {
@@ -97,7 +97,7 @@ func TestNormalizeOpenAIChatRequestDisablesThinkingForNoThinkingModel(t *testing
 
 func TestNormalizeOpenAIResponsesRequestAlwaysAcceptsWideInput(t *testing.T) {
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"input": "hi",
 	}
 

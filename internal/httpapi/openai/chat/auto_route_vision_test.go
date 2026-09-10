@@ -27,7 +27,7 @@ func TestChatCompletionsAutoRouteVisionUsesVisionModelTypeAndPreservesResponseMo
 		ChatHistory: historyStore,
 	}
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}}]}],"stream":false}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="}}]}],"stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -52,8 +52,8 @@ func TestChatCompletionsAutoRouteVisionUsesVisionModelTypeAndPreservesResponseMo
 	}
 
 	out := decodeJSONBody(t, rec.Body.String())
-	if got := out["model"]; got != "deepseek-v4-flash" {
-		t.Fatalf("expected response model deepseek-v4-flash, got %v", got)
+	if got := out["model"]; got != "deepseek-flash" {
+		t.Fatalf("expected response model deepseek-flash, got %v", got)
 	}
 }
 
@@ -75,7 +75,7 @@ func TestChatCompletionsAutoRouteVisionDisabledKeepsOriginalModel(t *testing.T) 
 		ChatHistory: historyStore,
 	}
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,abc"}}]}],"stream":false}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,abc"}}]}],"stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -118,7 +118,7 @@ func TestChatCompletionsAutoRouteVisionNoImageKeepsOriginalModel(t *testing.T) {
 		ChatHistory: historyStore,
 	}
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"hello"}],"stream":false}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":"hello"}],"stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -158,7 +158,7 @@ func TestChatCompletionsAutoRouteVisionStripsImageBlocks(t *testing.T) {
 		ChatHistory: historyStore,
 	}
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,abc"}}]}],"stream":false}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,abc"}}]}],"stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -284,7 +284,7 @@ func TestChatCompletionsAutoRouteVisionFollowUpWithoutImageReturnsToOriginalMode
 		ChatHistory: historyStore,
 	}
 
-	reqBody := `{"model":"deepseek-v4-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,abc"}}]},{"role":"assistant","content":"I see"},{"role":"user","content":"now text only"}],"stream":false}`
+	reqBody := `{"model":"deepseek-flash","messages":[{"role":"user","content":[{"type":"text","text":"describe this"},{"type":"image_url","image_url":{"url":"data:image/png;base64,abc"}}]},{"role":"assistant","content":"I see"},{"role":"user","content":"now text only"}],"stream":false}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(reqBody))
 	req.Header.Set("Authorization", "Bearer direct-token")
 	req.Header.Set("Content-Type", "application/json")
@@ -302,7 +302,7 @@ func TestChatCompletionsAutoRouteVisionFollowUpWithoutImageReturnsToOriginalMode
 		t.Fatalf("expected completion model_type=default for follow-up, got %v", payload["model_type"])
 	}
 	out := decodeJSONBody(t, rec.Body.String())
-	if got := out["model"]; got != "deepseek-v4-flash" {
-		t.Fatalf("expected response model deepseek-v4-flash, got %v", got)
+	if got := out["model"]; got != "deepseek-flash" {
+		t.Fatalf("expected response model deepseek-flash, got %v", got)
 	}
 }

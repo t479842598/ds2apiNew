@@ -17,7 +17,7 @@ func TestJSONRequestsRejectInvalidUTF8BeforeDecode(t *testing.T) {
 		t.Fatalf("NewApp() error: %v", err)
 	}
 
-	body := append([]byte(`{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"`), 0xff)
+	body := append([]byte(`{"model":"deepseek-flash","messages":[{"role":"user","content":"`), 0xff)
 	body = append(body, []byte(`"}]}`)...)
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", bytes.NewReader(body))
@@ -44,7 +44,7 @@ func TestKnownJSONRequestsRejectInvalidUTF8WithoutJSONContentType(t *testing.T) 
 		t.Fatalf("NewApp() error: %v", err)
 	}
 
-	body := append([]byte(`{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"`), 0xff)
+	body := append([]byte(`{"model":"deepseek-flash","messages":[{"role":"user","content":"`), 0xff)
 	body = append(body, []byte(`"}]}`)...)
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", bytes.NewReader(body))
@@ -71,7 +71,7 @@ func TestJSONRequestsRejectTrailingInvalidUTF8AfterCompleteJSON(t *testing.T) {
 		t.Fatalf("NewApp() error: %v", err)
 	}
 
-	body := append([]byte(`{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"ok"}]}`), 0xff)
+	body := append([]byte(`{"model":"deepseek-flash","messages":[{"role":"user","content":"ok"}]}`), 0xff)
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")

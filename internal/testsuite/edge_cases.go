@@ -47,7 +47,7 @@ func (r *Runner) caseConcurrencyThresholdLimit(ctx context.Context, cc *caseCont
 					"Authorization": "Bearer " + r.apiKey,
 				},
 				Body: map[string]any{
-					"model": "deepseek-v4-flash",
+					"model": "deepseek-flash",
 					"messages": []map[string]any{
 						{"role": "user", "content": fmt.Sprintf("并发边界测试 #%d，请输出不少于300字。", idx)},
 					},
@@ -92,7 +92,7 @@ func (r *Runner) caseStreamAbortRelease(ctx context.Context, cc *caseContext) er
 				"Authorization": "Bearer " + r.apiKey,
 			},
 			Body: map[string]any{
-				"model": "deepseek-v4-flash",
+				"model": "deepseek-flash",
 				"messages": []map[string]any{
 					{"role": "user", "content": fmt.Sprintf("中断释放测试 #%d，请流式回复", i)},
 				},
@@ -184,7 +184,7 @@ func (r *Runner) caseSSEJSONIntegrity(ctx context.Context, cc *caseContext) erro
 			"Authorization": "Bearer " + r.apiKey,
 		},
 		Body: map[string]any{
-			"model": "deepseek-v4-flash",
+			"model": "deepseek-flash",
 			"messages": []map[string]any{
 				{"role": "user", "content": "输出一句话"},
 			},

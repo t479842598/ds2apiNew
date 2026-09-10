@@ -109,7 +109,7 @@ func TestHandleVercelStreamPrepareAppliesCurrentInputFile(t *testing.T) {
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   true,
 	})
@@ -160,7 +160,7 @@ func TestHandleVercelStreamPrepareUsesHalfwidthEPSEToolPrompt(t *testing.T) {
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "search docs"},
 		},
@@ -342,7 +342,7 @@ func TestHandleVercelStreamPrepareUploadsToolsSeparately(t *testing.T) {
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "search docs"},
 		},
@@ -418,7 +418,7 @@ func TestHandleVercelStreamPrepareAutoRouteVision(t *testing.T) {
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": []any{
 				map[string]any{"type": "text", "text": "describe this"},
@@ -449,8 +449,8 @@ func TestHandleVercelStreamPrepareAutoRouteVision(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 		t.Fatalf("decode failed: %v", err)
 	}
-	if got := body["model"]; got != "deepseek-v4-flash" {
-		t.Fatalf("expected response model deepseek-v4-flash, got %v", got)
+	if got := body["model"]; got != "deepseek-flash" {
+		t.Fatalf("expected response model deepseek-flash, got %v", got)
 	}
 	payload, _ := body["payload"].(map[string]any)
 	if payload == nil {
@@ -476,7 +476,7 @@ func TestHandleVercelStreamPrepareAutoRouteVisionDisabledKeepsOriginalModel(t *t
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": []any{
 				map[string]any{"type": "text", "text": "describe this"},
@@ -507,8 +507,8 @@ func TestHandleVercelStreamPrepareAutoRouteVisionDisabledKeepsOriginalModel(t *t
 	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 		t.Fatalf("decode failed: %v", err)
 	}
-	if got := body["model"]; got != "deepseek-v4-flash" {
-		t.Fatalf("expected response model deepseek-v4-flash, got %v", got)
+	if got := body["model"]; got != "deepseek-flash" {
+		t.Fatalf("expected response model deepseek-flash, got %v", got)
 	}
 	payload, _ := body["payload"].(map[string]any)
 	if payload == nil {
@@ -535,7 +535,7 @@ func TestHandleVercelStreamPrepareMapsCurrentInputFileManagedAuthFailureTo401(t 
 	}
 
 	reqBody, _ := json.Marshal(map[string]any{
-		"model":    "deepseek-v4-flash",
+		"model":    "deepseek-flash",
 		"messages": historySplitTestMessages(),
 		"stream":   true,
 	})
@@ -584,9 +584,9 @@ func TestHandleVercelStreamSwitchReuploadsCurrentInputFile(t *testing.T) {
 		DS:    ds,
 	}
 	stdReq := promptcompat.StandardRequest{
-		RequestedModel:          "deepseek-v4-flash",
-		ResolvedModel:           "deepseek-v4-flash",
-		ResponseModel:           "deepseek-v4-flash",
+		RequestedModel:          "deepseek-flash",
+		ResolvedModel:           "deepseek-flash",
+		ResponseModel:           "deepseek-flash",
 		FinalPrompt:             "继续会话 使用工具时请参照说明与格式要求，仅使用所列出的工具",
 		PromptTokenText:         "# HISTORY.txt\n\n=== 1. USER ===\nhello\n\n# TOOLS.txt\nAvailable tool descriptions and parameter schemas for this request.\n\nYou have access to these tools:\n\nTool: search\nDescription: search docs\nParameters: {\"type\":\"object\"}\n",
 		HistoryText:             "# HISTORY.txt\n\n=== 1. USER ===\nhello\n",

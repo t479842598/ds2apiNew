@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 CONFIG_PATH="${1:-config.json}"
 SAMPLE_ID="${2:-capture-$(date -u +%Y%m%dT%H%M%SZ)}"
 QUESTION="${3:-广州天气}"
-MODEL="${4:-deepseek-v4-flash-search}"
+MODEL="${4:-deepseek-flash-search}"
 API_KEY="${5:-}"
 ADMIN_KEY="${DS2API_ADMIN_KEY:-admin}"
 

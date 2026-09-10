@@ -24,13 +24,13 @@ func TestVisionModelEquivalent(t *testing.T) {
 		model    string
 		expected string
 	}{
-		{"deepseek-v4-flash", "deepseek-v4-vision"},
-		{"deepseek-v4-pro", "deepseek-v4-vision"},
-		{"deepseek-v4-flash-search", "deepseek-v4-vision"},
-		{"deepseek-v4-flash-nothinking", "deepseek-v4-vision-nothinking"},
-		{"deepseek-v4-pro-nothinking", "deepseek-v4-vision-nothinking"},
-		{"deepseek-v4-vision", ""},
-		{"deepseek-v4-vision-nothinking", ""},
+		{"deepseek-flash", "deepseek-vision"},
+		{"deepseek-v4-pro", "deepseek-vision"},
+		{"deepseek-flash-search", "deepseek-vision"},
+		{"deepseek-flash-nothinking", "deepseek-vision-nothinking"},
+		{"deepseek-v4-pro-nothinking", "deepseek-vision-nothinking"},
+		{"deepseek-vision", ""},
+		{"deepseek-vision-nothinking", ""},
 		{"gpt-4o", ""},
 		{"", ""},
 	}
@@ -44,7 +44,7 @@ func TestVisionModelEquivalent(t *testing.T) {
 
 func TestRequestContainsImageContent(t *testing.T) {
 	imageURLReq := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -60,7 +60,7 @@ func TestRequestContainsImageContent(t *testing.T) {
 	}
 
 	inputImageReq := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -75,7 +75,7 @@ func TestRequestContainsImageContent(t *testing.T) {
 	}
 
 	textOnlyReq := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "hello"},
 		},
@@ -85,7 +85,7 @@ func TestRequestContainsImageContent(t *testing.T) {
 	}
 
 	documentReq := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -100,7 +100,7 @@ func TestRequestContainsImageContent(t *testing.T) {
 	}
 
 	historicalImageReq := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -188,7 +188,7 @@ func TestMaybeAutoRouteVision(t *testing.T) {
 		autoRouteVision: true,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -202,11 +202,11 @@ func TestMaybeAutoRouteVision(t *testing.T) {
 	if !rerouted {
 		t.Fatal("expected reroute")
 	}
-	if originalModel != "deepseek-v4-flash" {
-		t.Fatalf("expected original model deepseek-v4-flash, got %q", originalModel)
+	if originalModel != "deepseek-flash" {
+		t.Fatalf("expected original model deepseek-flash, got %q", originalModel)
 	}
-	if req["model"] != "deepseek-v4-vision" {
-		t.Fatalf("expected model rewritten to deepseek-v4-vision, got %q", req["model"])
+	if req["model"] != "deepseek-vision" {
+		t.Fatalf("expected model rewritten to deepseek-vision, got %q", req["model"])
 	}
 }
 
@@ -230,8 +230,8 @@ func TestMaybeAutoRouteVisionPreservesNoThinking(t *testing.T) {
 	if !rerouted {
 		t.Fatal("expected reroute")
 	}
-	if req["model"] != "deepseek-v4-vision-nothinking" {
-		t.Fatalf("expected model rewritten to deepseek-v4-vision-nothinking, got %q", req["model"])
+	if req["model"] != "deepseek-vision-nothinking" {
+		t.Fatalf("expected model rewritten to deepseek-vision-nothinking, got %q", req["model"])
 	}
 }
 
@@ -241,7 +241,7 @@ func TestMaybeAutoRouteVisionDisabled(t *testing.T) {
 		autoRouteVision: false,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -255,7 +255,7 @@ func TestMaybeAutoRouteVisionDisabled(t *testing.T) {
 	if rerouted {
 		t.Fatal("expected no reroute when disabled")
 	}
-	if req["model"] != "deepseek-v4-flash" {
+	if req["model"] != "deepseek-flash" {
 		t.Fatalf("expected model unchanged, got %q", req["model"])
 	}
 }
@@ -266,7 +266,7 @@ func TestMaybeAutoRouteVisionNoImage(t *testing.T) {
 		autoRouteVision: true,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-flash",
+		"model": "deepseek-flash",
 		"messages": []any{
 			map[string]any{"role": "user", "content": "hello"},
 		},
@@ -283,7 +283,7 @@ func TestMaybeAutoRouteVisionAlreadyVision(t *testing.T) {
 		autoRouteVision: true,
 	}
 	req := map[string]any{
-		"model": "deepseek-v4-vision",
+		"model": "deepseek-vision",
 		"messages": []any{
 			map[string]any{
 				"role": "user",
@@ -322,14 +322,14 @@ func TestMaybeAutoRouteVisionAlias(t *testing.T) {
 	if originalModel != "gpt-4o" {
 		t.Fatalf("expected original model gpt-4o, got %q", originalModel)
 	}
-	if req["model"] != "deepseek-v4-vision" {
-		t.Fatalf("expected model rewritten to deepseek-v4-vision, got %q", req["model"])
+	if req["model"] != "deepseek-vision" {
+		t.Fatalf("expected model rewritten to deepseek-vision, got %q", req["model"])
 	}
 }
 
 func TestStripImageBlocksFromRequest(t *testing.T) {
 	req := map[string]any{
-		"model": "deepseek-v4-vision",
+		"model": "deepseek-vision",
 		"messages": []any{
 			map[string]any{
 				"role": "user",

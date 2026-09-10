@@ -89,7 +89,7 @@ func TestExecuteNonStreamWithRetryBuildsCanonicalTurn(t *testing.T) {
 	)}}
 	stdReq := promptcompat.StandardRequest{
 		Surface:         "test",
-		ResponseModel:   "deepseek-v4-flash",
+		ResponseModel:   "deepseek-flash",
 		PromptTokenText: "prompt",
 		FinalPrompt:     "final prompt",
 		ToolNames:       []string{"Write"},
@@ -155,7 +155,7 @@ func TestExecuteNonStreamWithRetrySwitchesManagedAccountBeforeFinal429(t *testin
 	}
 	stdReq := promptcompat.StandardRequest{
 		Surface:         "test",
-		ResponseModel:   "deepseek-v4-flash",
+		ResponseModel:   "deepseek-flash",
 		PromptTokenText: "prompt",
 		FinalPrompt:     "final prompt",
 		Thinking:        true,
@@ -218,9 +218,9 @@ func TestExecuteNonStreamWithRetryReuploadsCurrentInputFileAfterAccountSwitch(t 
 	}
 	stdReq := promptcompat.StandardRequest{
 		Surface:        "test",
-		RequestedModel: "deepseek-v4-flash",
-		ResolvedModel:  "deepseek-v4-flash",
-		ResponseModel:  "deepseek-v4-flash",
+		RequestedModel: "deepseek-flash",
+		ResolvedModel:  "deepseek-flash",
+		ResponseModel:  "deepseek-flash",
 		Messages: []any{
 			map[string]any{"role": "user", "content": "large current input"},
 		},
@@ -255,7 +255,7 @@ func TestExecuteNonStreamWithRetryUsesParentMessageForEmptyRetry(t *testing.T) {
 	}}
 	stdReq := promptcompat.StandardRequest{
 		Surface:         "test",
-		ResponseModel:   "deepseek-v4-flash",
+		ResponseModel:   "deepseek-flash",
 		PromptTokenText: "prompt",
 		FinalPrompt:     "final prompt",
 	}
@@ -290,7 +290,7 @@ func TestExecuteNonStreamWithRetryFallsBackToPayloadParentWhenAttemptHasNoMessag
 		Response:  ds.responses[0],
 		Request: promptcompat.StandardRequest{
 			Surface:         "test",
-			ResponseModel:   "deepseek-v4-flash",
+			ResponseModel:   "deepseek-flash",
 			PromptTokenText: "prompt",
 			FinalPrompt:     "final prompt",
 		},
@@ -322,7 +322,7 @@ func TestExecuteNonStreamWithRetryConvertsReferenceMarkers(t *testing.T) {
 	)}}
 	stdReq := promptcompat.StandardRequest{
 		Surface:         "test",
-		ResponseModel:   "deepseek-v4-flash-search",
+		ResponseModel:   "deepseek-flash-search",
 		PromptTokenText: "prompt",
 		FinalPrompt:     "final prompt",
 		Search:          true,
@@ -342,9 +342,9 @@ func TestStartCompletionAppliesCurrentInputFileGlobally(t *testing.T) {
 	ds := &fakeDeepSeekCaller{responses: []*http.Response{sseHTTPResponse(http.StatusOK, `data: {"p":"response/content","v":"ok"}`)}}
 	stdReq := promptcompat.StandardRequest{
 		Surface:         "test_adapter",
-		RequestedModel:  "deepseek-v4-flash",
-		ResolvedModel:   "deepseek-v4-flash",
-		ResponseModel:   "deepseek-v4-flash",
+		RequestedModel:  "deepseek-flash",
+		ResolvedModel:   "deepseek-flash",
+		ResponseModel:   "deepseek-flash",
 		PromptTokenText: "first user turn",
 		FinalPrompt:     "first user turn",
 		Messages: []any{

@@ -553,7 +553,7 @@ func TestUpdateConfigLegacyKeysPreserveStructuredMetadata(t *testing.T) {
 func TestUpdateConfigReplacesModelAliases(t *testing.T) {
 	h := newAdminTestHandler(t, `{
 		"keys":["k1"],
-		"model_aliases":{"claude-sonnet-4-6":"deepseek-v4-flash"}
+		"model_aliases":{"claude-sonnet-4-6":"deepseek-flash"}
 	}`)
 
 	payload := map[string]any{

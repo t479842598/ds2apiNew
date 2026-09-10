@@ -39,7 +39,7 @@ func TestClaudeDirectRecordsResponseHistory(t *testing.T) {
 	ds := &claudeCurrentInputDS{}
 	historyStore := chathistory.New(filepath.Join(t.TempDir(), "history.json"))
 	h := &Handler{
-		Store:       claudeHistoryConfig{aliases: map[string]string{"claude-sonnet-4-6": "deepseek-v4-flash"}},
+		Store:       claudeHistoryConfig{aliases: map[string]string{"claude-sonnet-4-6": "deepseek-flash"}},
 		Auth:        claudeCurrentInputAuth{},
 		DS:          ds,
 		ChatHistory: historyStore,
@@ -130,7 +130,7 @@ func TestClaudeDirectAppliesCurrentInputFile(t *testing.T) {
 	ds := &claudeCurrentInputDS{}
 	historyStore := chathistory.New(filepath.Join(t.TempDir(), "history.json"))
 	h := &Handler{
-		Store:       mockClaudeConfig{aliases: map[string]string{"claude-sonnet-4-6": "deepseek-v4-flash"}},
+		Store:       mockClaudeConfig{aliases: map[string]string{"claude-sonnet-4-6": "deepseek-flash"}},
 		Auth:        claudeCurrentInputAuth{},
 		DS:          ds,
 		ChatHistory: historyStore,
@@ -181,7 +181,7 @@ func TestClaudeDirectAppliesCurrentInputFile(t *testing.T) {
 func TestClaudeCurrentInputFileUploadsToolsSeparately(t *testing.T) {
 	ds := &claudeCurrentInputDS{}
 	h := &Handler{
-		Store: mockClaudeConfig{aliases: map[string]string{"claude-sonnet-4-6": "deepseek-v4-flash"}},
+		Store: mockClaudeConfig{aliases: map[string]string{"claude-sonnet-4-6": "deepseek-flash"}},
 		Auth:  claudeCurrentInputAuth{},
 		DS:    ds,
 	}

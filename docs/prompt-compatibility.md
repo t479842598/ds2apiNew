@@ -323,7 +323,7 @@ OpenAI 的文件上传现在不再是"只传文件本体"的通用路径，而�
 
 ### 8.1 自动路由视觉模型（`auto_route_vision`）
 
-`auto_route_vision` 是行为设置中的开关，默认关闭。开启后，当客户端选择非 vision 模型（如 `deepseek-v4-flash`、`deepseek-v4-pro` 及其 alias）且**当前用户轮次**携带图片内容时，DS2API 会把本次请求临时路由到 `deepseek-v4-vision`（若原模型带 `-nothinking` 后缀则映射到 `deepseek-v4-vision-nothinking`），同时把图片块从 prompt 消息中剔除，仅保留已上传的文件引用。历史消息中的图片不会触发本次路由，因此不带新图片的 follow-up 请求会自动回到用户原来选择的模型。
+`auto_route_vision` 是行为设置中的开关，默认关闭。开启后，当客户端选择非 vision 模型（如 `deepseek-flash`、`deepseek-v4-pro` 及其 alias）且**当前用户轮次**携带图片内容时，DS2API 会把本次请求临时路由到 `deepseek-vision`（若原模型带 `-nothinking` 后缀则映射到 `deepseek-vision-nothinking`），同时把图片块从 prompt 消息中剔除，仅保留已上传的文件引用。历史消息中的图片不会触发本次路由，因此不带新图片的 follow-up 请求会自动回到用户原来选择的模型。
 
 处理顺序：
 

@@ -6,7 +6,7 @@
 
 > 基于 [ouqiting/ds2api](https://github.com/ouqiting/ds2api) 的定制分支，为 FreeBuff 提供 DeepSeek API 转换服务。
 
-## 当前版本：v3.3.0-freebuff
+## 当前版本：v4.10.0-freebuff
 
 ### 在上游基础上做了若干修改，主要解决 deepseek 封号问题。实测目前个人使用几乎已无禁言封号风险
 
@@ -156,14 +156,14 @@ OpenAI `/v1/*` 仍是推荐的规范路径；同时支持 `/models`、`/chat/com
 
 | 模型类型 | 模型 ID | thinking | search |
 | --- | --- | --- | --- |
-| default | `deepseek-v4-flash` | 默认开启，可由请求参数控制 | ❌ |
-| default | `deepseek-v4-flash-nothinking` | 永久关闭，不受请求参数影响 | ❌ |
+| default | `deepseek-flash` | 默认开启，可由请求参数控制 | ❌ |
+| default | `deepseek-flash-nothinking` | 永久关闭，不受请求参数影响 | ❌ |
 | expert | `deepseek-v4-pro` | 默认开启，可由请求参数控制 | ❌ |
 | expert | `deepseek-v4-pro-nothinking` | 永久关闭，不受请求参数影响 | ❌ |
-| default | `deepseek-v4-flash-search` | 默认开启，可由请求参数控制 | ✅ |
-| default | `deepseek-v4-flash-search-nothinking` | 永久关闭，不受请求参数影响 | ✅ |
-| vision | `deepseek-v4-vision` | 默认开启，可由请求参数控制 | ❌ |
-| vision | `deepseek-v4-vision-nothinking` | 永久关闭，不受请求参数影响 | ❌ |
+| default | `deepseek-flash-search` | 默认开启，可由请求参数控制 | ✅ |
+| default | `deepseek-flash-search-nothinking` | 永久关闭，不受请求参数影响 | ✅ |
+| vision | `deepseek-vision` | 默认开启，可由请求参数控制 | ❌ |
+| vision | `deepseek-vision-nothinking` | 永久关闭，不受请求参数影响 | ❌ |
 
 除原生模型外，也支持常见 alias 输入（如 `gpt-4.1`、`gpt-5`、`gpt-5-codex`、`o3`、`claude-*`、`gemini-*` 等），但 `/v1/models` 返回的是规范化后的 DeepSeek 原生模型 ID。若 alias 名本身追加 `-nothinking` 后缀，也会映射到对应的强制关思考模型。完整 alias 行为以 [API.md](API.md#模型-alias-解析策略) 和 `config.example.json` 为准。
 当前上游视觉模型只暴露 `vision` 通道，不提供独立的联网搜索视觉变体。
@@ -172,10 +172,10 @@ OpenAI `/v1/*` 仍是推荐的规范路径；同时支持 `/models`、`/chat/com
 
 | 当前常用模型 | 默认映射 |
 | --- | --- |
-| `claude-sonnet-4-6` | `deepseek-v4-flash` |
-| `claude-sonnet-4-6-nothinking` | `deepseek-v4-flash-nothinking` |
-| `claude-haiku-4-5`（兼容 `claude-3-5-haiku-latest`） | `deepseek-v4-flash` |
-| `claude-haiku-4-5-nothinking` | `deepseek-v4-flash-nothinking` |
+| `claude-sonnet-4-6` | `deepseek-flash` |
+| `claude-sonnet-4-6-nothinking` | `deepseek-flash-nothinking` |
+| `claude-haiku-4-5`（兼容 `claude-3-5-haiku-latest`） | `deepseek-flash` |
+| `claude-haiku-4-5-nothinking` | `deepseek-flash-nothinking` |
 | `claude-opus-4-6` | `deepseek-v4-pro` |
 | `claude-opus-4-6-nothinking` | `deepseek-v4-pro-nothinking` |
 

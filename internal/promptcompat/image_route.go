@@ -6,7 +6,7 @@ import (
 	"ds2api/internal/config"
 )
 
-const visionModel = "deepseek-v4-vision"
+const visionModel = "deepseek-vision"
 const visionModelNoThinking = visionModel + configNoThinkingSuffix
 
 const configNoThinkingSuffix = "-nothinking"

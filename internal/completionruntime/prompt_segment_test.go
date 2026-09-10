@@ -27,7 +27,7 @@ func TestShouldSegmentExpertPrompt_DisabledReturnsNil(t *testing.T) {
 
 func TestShouldSegmentExpertPrompt_NonExpertReturnsNil(t *testing.T) {
 	stdReq := promptcompat.StandardRequest{
-		ResolvedModel: "deepseek-v4-flash",
+		ResolvedModel: "deepseek-flash",
 		FinalPrompt:   stringRepeat("X", 200000),
 	}
 	opts := Options{ExpertPromptSegment: mockExpertSegmentConfig{enabled: true, maxChars: 120000}}
