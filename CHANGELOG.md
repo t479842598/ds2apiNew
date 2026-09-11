@@ -1,5 +1,48 @@
 # Changelog
 
+## 4.10.1 (2026-09-12)
+
+### 修复：上游单次限流导致的「思考完直接中断」，同账号重试上限可配（默认 1 → 3）
+
+**症状**：流式请求偶发在「思考输出完毕后直接结束」，既没有正文也没有明显报错。客户端能看到
+完整 reasoning，因此表现为「思考完就断了」，用户无从判断是模型问题还是服务问题。
+
+**根因**：上游 DeepSeek 限流时会返回「只有 reasoning、正文为空」的响应。本项目已把 thinking
+作为 `reasoning_content` 流式下发给客户端渲染，但正文为空会触发
+`assistantturn.ValidateTurn` → `upstream_empty_output`（429）。该错误帧走 SSE `data:` 下发、
+HTTP 状态码仍是 200，所以前端只看到思考戛然而止。
+而原有的空输出补偿重试上限被硬编码为 **1**，且合成重试与首发走**同一账号**——一次瞬时限流
+即可耗尽全部重试预算，接不上后续的账号切换。
+
+**一手证据（2026-09-12 01:56 生产实例）**：`chat_history.json` 中该条
+`finish_reason=upstream_empty_output`、`status_code=429`、`preview` 内容为 thinking 而非正文；
+**14 秒后**同账号的下一条请求即 `finish_reason=stop` / `status=success`，证明是单次瞬时限流
+而非账号故障。
+
+**变更内容**：
+- `internal/httpapi/openai/shared/empty_retry.go`：新增 `DefaultEmptyOutputRetryMaxAttempts = 3`，
+  `EmptyOutputRetryMaxAttempts()` 改为读取 `DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS`，
+  未设置或值非法（非整数、≤ 0）时回退默认值。
+- `internal/js/chat-stream/vercel_stream_impl.js`：新增 `emptyOutputRetryMaxAttempts()` 读取同一
+  环境变量，用 `/^\d+$/` 校验以对齐 Go 侧 `strconv.Atoi` 的严格性，保证两个运行时对同一配置
+  解析出一致结果；上限在重试循环外只计算一次。
+- **重试循环结构未改动**：仍是先做同账号合成重试、耗尽后才切账号；终态仍以
+  `upstream_empty_output` 429 收尾，不改为静默成功。
+
+**回退方式**：将 `DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS` 设为 `1` 即恢复旧行为，
+无需回滚版本。
+
+**测试**：
+- 新增 `internal/httpapi/openai/shared/empty_retry_test.go`，覆盖默认值、环境变量覆盖、
+  非法值回退、以及显式设为 1 四组用例。
+- `tests/node/chat-stream.test.js` 新增「默认预算内同账号重试成功、无需切号」用例。
+- 既有两处依赖「1 轮后切账号」语义的测试改为显式传入 1 轮，使测试意图不再耦合全局默认值：
+  Go 侧 `internal/completionruntime/nonstream_test.go`、Node 侧
+  `tests/node/chat-stream.test.js` 的 `switches managed account after empty retry exhaustion`。
+
+**文档**：`docs/prompt-compatibility.md`、`API.md` / `API.en.md`、`README.MD`、`.env.example`
+同步更新重试轮数语义与新环境变量。
+
 ## 4.10.0 (2026-09-10)
 
 ### 变更：模型 ID 对齐官方 V4.1-Flash 命名，旧 `deepseek-v4-*` ID 退役

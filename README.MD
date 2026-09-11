@@ -371,6 +371,7 @@ go run ./cmd/ds2api
 可选请求头 `X-Ds2-Target-Account`：指定使用某个托管账号（值为 email 或 mobile）。
 如果指定账号不存在，或者当前管理账号队列已满，请求会返回 `429`；当前 `429` 不附带 `Retry-After` 头。若账号存在但登录/刷新失败，则返回对应的鉴权错误。
 未指定目标账号时，如果 completion 因上游 thinking-only 空输出在同账号补偿重试后仍将返回 `429 upstream_empty_output`，托管账号模式会自动切到下一个可用账号，新建 session，并用原始 payload 再 fresh retry 一次。
+同账号内的补偿重试轮数由 `DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS` 控制（默认 3；设为 `1` 可恢复旧的一次性行为）。上游限流常表现为「只回 reasoning、正文为空」，轮数太少会直接透传为 `429`。
 Gemini 路由还可以使用 `x-goog-api-key`，或在没有认证头时使用 `?key=` / `?api_key=` 作为调用方凭据。
 
 ## 并发模型
@@ -384,7 +385,7 @@ Gemini 路由还可以使用 `x-goog-api-key`，或在没有认证头时使用 `
 
 - 当 in-flight 槽位满时，请求进入等待队列，**不会立即 429**
 - 超出总承载上限后才返回 `429 Too Many Requests`，当前响应不附带 `Retry-After`
-- completion 空输出类 429 会先做同账号补偿重试；托管账号模式还会在最终返回 429 前切到另一个可用账号 fresh retry 一次
+- completion 空输出类 429 会先做同账号补偿重试（轮数见 `DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS`，默认 3）；托管账号模式还会在最终返回 429 前切到另一个可用账号 fresh retry 一次
 - `GET /admin/queue/status` 返回实时并发状态
 
 ## Mihomo 代理桥（一号一 IP）

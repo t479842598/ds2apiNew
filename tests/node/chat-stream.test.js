@@ -226,6 +226,8 @@ test('vercel stream retries thinking-only output once', async () => {
 
 test('vercel stream switches managed account after empty retry exhaustion', async () => {
   const originalFetch = global.fetch;
+  const originalRetryMax = process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+  process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS = '1';
   const fetchURLs = [];
   const completionBodies = [];
   const completionAuth = [];
@@ -295,6 +297,92 @@ test('vercel stream switches managed account after empty retry exhaustion', asyn
     assert.equal(parsed.at(-1).choices[0].finish_reason, 'stop');
   } finally {
     global.fetch = originalFetch;
+    if (originalRetryMax === undefined) {
+      delete process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+    } else {
+      process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS = originalRetryMax;
+    }
+  }
+});
+
+test('vercel stream retries empty output on the same account before switching', async () => {
+  const originalFetch = global.fetch;
+  const originalRetryMax = process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+  delete process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+  const fetchURLs = [];
+  const completionBodies = [];
+  const completionAuth = [];
+  let completionCalls = 0;
+  global.fetch = async (url, init = {}) => {
+    const textURL = String(url);
+    fetchURLs.push(textURL);
+    if (textURL.includes('__stream_prepare=1')) {
+      return jsonResponse({
+        session_id: 'chatcmpl-test',
+        lease_id: 'lease-test',
+        model: 'gpt-test',
+        final_prompt: 'hello',
+        thinking_enabled: true,
+        search_enabled: false,
+        tool_names: [],
+        deepseek_token: 'token-1',
+        pow_header: 'pow-1',
+        payload: { chat_session_id: 'session-1', prompt: 'hello', ref_file_ids: ['file-1'] },
+      });
+    }
+    if (textURL.includes('__stream_pow=1')) {
+      return jsonResponse({ pow_header: 'pow-retry' });
+    }
+    if (textURL.includes('__stream_switch=1')) {
+      return jsonResponse({
+        session_id: 'session-2',
+        lease_id: 'lease-test',
+        model: 'gpt-test',
+        final_prompt: 'hello',
+        thinking_enabled: true,
+        search_enabled: false,
+        tool_names: [],
+        deepseek_token: 'token-2',
+        pow_header: 'pow-2',
+        payload: { chat_session_id: 'session-2', prompt: 'hello', ref_file_ids: ['file-2'] },
+      });
+    }
+    if (textURL.includes('__stream_release=1')) {
+      return jsonResponse({ success: true });
+    }
+    if (textURL === 'https://chat.deepseek.com/api/v0/chat/completion') {
+      completionBodies.push(JSON.parse(String(init.body)));
+      completionAuth.push(init.headers.authorization);
+      completionCalls += 1;
+      if (completionCalls <= 2) {
+        return sseResponse([`data: {"response_message_id":${40 + completionCalls},"p":"response/thinking_content","v":"plan"}\n\n`, 'data: [DONE]\n\n']);
+      }
+      return sseResponse(['data: {"p":"response/content","v":"visible"}\n\n', 'data: [DONE]\n\n']);
+    }
+    throw new Error(`unexpected fetch url: ${textURL}`);
+  };
+  try {
+    const req = new MockStreamRequest();
+    const res = new MockStreamResponse();
+    const payload = { model: 'gpt-test', stream: true };
+    await handleVercelStream(req, res, Buffer.from(JSON.stringify(payload)), payload);
+    const frames = parseSSEDataFrames(res.bodyText());
+    const parsed = frames.filter((frame) => frame !== '[DONE]').map((frame) => JSON.parse(frame));
+    // Default budget is 3: the first two attempts return thinking-only on the
+    // same account, and the third succeeds there, so no switch is ever needed.
+    assert.equal(fetchURLs.filter((url) => url.includes('__stream_switch=1')).length, 0);
+    assert.equal(completionBodies.length, 3);
+    assert.deepEqual(completionAuth, ['Bearer token-1', 'Bearer token-1', 'Bearer token-1']);
+    assert.match(completionBodies[1].prompt, /Previous reply had no visible output/);
+    assert.match(completionBodies[2].prompt, /Previous reply had no visible output/);
+    assert.equal(parsed.at(-1).choices[0].finish_reason, 'stop');
+  } finally {
+    global.fetch = originalFetch;
+    if (originalRetryMax === undefined) {
+      delete process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+    } else {
+      process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS = originalRetryMax;
+    }
   }
 });
 

@@ -161,7 +161,7 @@ func TestExecuteNonStreamWithRetrySwitchesManagedAccountBeforeFinal429(t *testin
 		Thinking:        true,
 	}
 
-	result, outErr := ExecuteNonStreamWithRetry(context.Background(), ds, a, stdReq, Options{RetryEnabled: true})
+	result, outErr := ExecuteNonStreamWithRetry(context.Background(), ds, a, stdReq, Options{RetryEnabled: true, RetryMaxAttempts: 1})
 	if outErr != nil {
 		t.Fatalf("unexpected output error after account switch retry: %#v", outErr)
 	}
@@ -231,6 +231,7 @@ func TestExecuteNonStreamWithRetryReuploadsCurrentInputFileAfterAccountSwitch(t 
 
 	result, outErr := ExecuteNonStreamWithRetry(context.Background(), ds, a, stdReq, Options{
 		RetryEnabled:     true,
+		RetryMaxAttempts: 1,
 		CurrentInputFile: currentInputRuntimeConfig{},
 	})
 	if outErr != nil {

@@ -36,8 +36,25 @@ const {
 const DEEPSEEK_COMPLETION_URL = 'https://chat.deepseek.com/api/v0/chat/completion';
 const DEEPSEEK_CONTINUE_URL = 'https://chat.deepseek.com/api/v0/chat/continue';
 const EMPTY_OUTPUT_RETRY_SUFFIX = 'Previous reply had no visible output. Please regenerate the visible final answer or tool call now.';
-const EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS = 1;
+const DEFAULT_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS = 3;
 const AUTO_CONTINUE_MAX_ROUNDS = 8;
+
+// Mirrors shared.EmptyOutputRetryMaxAttempts() on the Go side: upstream
+// rate-limits surface as a thinking-only response, and one same-account retry
+// rarely outlives them.
+function emptyOutputRetryMaxAttempts() {
+  const raw = asString(process.env.DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS).trim();
+  // Reject partially-numeric input the way strconv.Atoi does on the Go side,
+  // so both runtimes resolve the same value for the same env setting.
+  if (!/^\d+$/.test(raw)) {
+    return DEFAULT_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS;
+  }
+  return parsed;
+}
 
 async function handleVercelStream(req, res, rawBody, payload) {
   const prep = await fetchStreamPrepare(req, rawBody);
@@ -496,10 +513,11 @@ async function handleVercelStream(req, res, rawBody, payload) {
 
     let retryAttempts = 0;
     let accountSwitchAttempted = false;
+    const retryMaxAttempts = emptyOutputRetryMaxAttempts();
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const isUpstreamUnavailable = lastEmptyDetail && lastEmptyDetail.code === 'upstream_unavailable';
-      const allowDeferEmpty = retryAttempts < EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS || !accountSwitchAttempted || isUpstreamUnavailable;
+      const allowDeferEmpty = retryAttempts < retryMaxAttempts || !accountSwitchAttempted || isUpstreamUnavailable;
       const processed = await processStream(completionRes, allowDeferEmpty);
       if (processed.terminal) {
         return;
@@ -508,7 +526,7 @@ async function handleVercelStream(req, res, rawBody, payload) {
         await finish('stop');
         return;
       }
-      if (retryAttempts >= EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS) {
+      if (retryAttempts >= retryMaxAttempts) {
         if (isUpstreamUnavailable) {
           const switched = await fetchStreamSwitch(req, leaseID, { disable: true });
           if (switched.ok && switched.body && switched.body.payload && typeof switched.body.payload === 'object') {

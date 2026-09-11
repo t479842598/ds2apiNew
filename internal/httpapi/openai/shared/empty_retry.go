@@ -1,15 +1,33 @@
 package shared
 
-import "strings"
+import (
+	"os"
+	"strconv"
+	"strings"
+)
 
 const EmptyOutputRetrySuffix = "Previous reply had no visible output. Please regenerate the visible final answer or tool call now."
+
+// DefaultEmptyOutputRetryMaxAttempts is used when
+// DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS is unset or unusable. Upstream
+// rate-limits tend to surface as a thinking-only response, and a single
+// same-account retry rarely outlives them, so the default allows a few rounds.
+const DefaultEmptyOutputRetryMaxAttempts = 3
 
 func EmptyOutputRetryEnabled() bool {
 	return true
 }
 
 func EmptyOutputRetryMaxAttempts() int {
-	return 1
+	raw := strings.TrimSpace(os.Getenv("DS2API_EMPTY_OUTPUT_RETRY_MAX_ATTEMPTS"))
+	if raw == "" {
+		return DefaultEmptyOutputRetryMaxAttempts
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil || parsed <= 0 {
+		return DefaultEmptyOutputRetryMaxAttempts
+	}
+	return parsed
 }
 
 func ClonePayloadWithEmptyOutputRetryPrompt(payload map[string]any) map[string]any {
